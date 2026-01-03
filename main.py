@@ -1,11 +1,6 @@
 import os
 import telebot
 import google.generativeai as genai
-import os 
-# إعدادات الـ API (بنعلمك كيف تحطها بأمان بعدين)
-TOKEN = "8362864755:AAHpwQGv98HckxteHT36Lnx6CtNXZXUl_7E"
-AI_KEY = "AIzaSyAf34vpycvpBBquZG9lCMLiff4B3kEXuJ8"
-
 import os
 TOKEN = os.getenv("TELEGRAM_TOKEN")
 AI_KEY = os.getenv("GEMINI_KEY")
@@ -29,5 +24,6 @@ def chat(message):
     # إرسال الكلام للـ AI للحصول على الرد
     response = model.generate_content(f"{INSTRUCTION}\nالطالب يقول: {message.text}")
     bot.reply_to(message, response.text)
+
 
 bot.polling()
