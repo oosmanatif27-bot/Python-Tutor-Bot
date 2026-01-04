@@ -13,8 +13,7 @@ AI_KEY = os.getenv("GEMINI_KEY")
 # 2. إعداد البوت والموديل (استخدام النسخة المستقرة)
 bot = telebot.TeleBot(TOKEN)
 genai.configure(api_key=AI_KEY)
-model = genai.GenerativeModel('gemini-1.5-flash')
-
+model = genai.GenerativeModel('models/gemini-1.5-flash')
 # 3. نظام التدريس (التعليمات البرمجية)
 INSTRUCTION = """أنت مدرس بايثون محترف ولطيف. 
 ابدأ مع الطالب من الصفر تماماً. 
@@ -50,3 +49,4 @@ threading.Thread(target=run_health_server, daemon=True).start()
 # 7. تشغيل البوت مع ميزة skip_pending لتجنب تعليق الرسائل القديمة
 print("البوت بدأ العمل بنجاح...")
 bot.infinity_polling(skip_pending=True)
+
