@@ -48,5 +48,8 @@ threading.Thread(target=run_health_server, daemon=True).start()
 
 # 7. تشغيل البوت مع ميزة skip_pending لتجنب تعليق الرسائل القديمة
 print("البوت بدأ العمل بنجاح...")
-bot.infinity_polling(skip_pending=True)
+bot.infinity_polling(skip_pending=True
+# تشغيل البوت مع زيادة وقت الانتظار لضمان عدم الفصل
+bot.polling(none_stop=True, timeout=90, long_polling_timeout=90)
+
 
