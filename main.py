@@ -1,59 +1,57 @@
 import os
 import telebot
-import google.generativeai as genai
+from google import genai # المكتبة الجديدة
 import threading
 import http.server
 import socketserver
 
-# جلب المفاتيح من البيئة
+# الإعدادات
 TOKEN = os.getenv("TELEGRAM_TOKEN")
 AI_KEY = os.getenv("GEMINI_KEY")
 
 bot = telebot.TeleBot(TOKEN)
 
-# إعداد الـ AI
-genai.configure(api_key=AI_KEY)
+# إعداد العميل الجديد (New Client)
+client = genai.Client(api_key=AI_KEY)
+MODEL_ID = "gemini-1.5-flash"
 
-# استخدام الموديل الأحدث والأكثر استقراراً
-# لاحظ أننا استخدمنا gemini-1.5-flash
-model = genai.GenerativeModel('gemini-1.5-flash')
-
-INSTRUCTION = "أنت مدرس بايثون محترف ولطيف. ابدأ من الصفر حتى الاحترااف و بشكل عفوي و تعليمي مع الطالب بلهجة سعودية محببة."
+INSTRUCTION = "أنت مدرس بايثون محترف ولطيف. ابدأ من الصفر مع الطالب بلهجة سعودية."
 
 @bot.message_handler(commands=['start'])
 def send_welcome(message):
-    bot.send_message(message.chat.id, "مرحبا بك في Bot Empire! 🐍✨\nأنا معلمك الخاص للبايثون، جاهز نبدأ؟")
+    bot.send_message(message.chat.id, "مرحباً بك في Bot Empire! 🐍\nمعك مدربك الخاص، وش حاب نتعلم اليوم؟")
 
 @bot.message_handler(func=lambda message: True)
 def chat(message):
     try:
-        # توليد المحتوى مع معالجة الأخطاء
-        full_prompt = f"{INSTRUCTION}\nالطالب يقول: {message.text}"
-        response = model.generate_content(full_prompt)
+        # الطريقة الجديدة لاستدعاء التوليد
+        response = client.models.generate_content(
+            model=MODEL_ID,
+            contents=f"{INSTRUCTION}\nالطالب يقول: {message.text}"
+        )
         
         if response.text:
             bot.send_message(message.chat.id, response.text)
         else:
-            bot.send_message(message.chat.id, "لم أستطع فهم ذلك، حاول صياغة السؤال بشكل آخر.")
+            bot.send_message(message.chat.id, "الرد فارغ، جرب تسأل سؤال ثاني.")
             
     except Exception as e:
-        print(f"حدث خطأ: {e}")
-        # رسالة تنبيه للمستخدم بوجود مشكلة تقنية
-        bot.send_message(message.chat.id, "أعتذر منك، واجهت مشكلة في الاتصال بعقلي الاصطناعي!")
+        print(f"حدث خطأ أثناء التوليد: {e}")
+        bot.send_message(message.chat.id, "واجهت مشكلة في معالجة طلبك، حاول لاحقاً.")
 
-# سيرفر فحص الحالة (Health Check)
+# سيرفر الصحة (Health Check) لمنصة Koyeb
 def run_health_server():
     port = 8000
     handler = http.server.SimpleHTTPRequestHandler
-    try:
-        with socketserver.TCPServer(("", port), handler) as httpd:
-            print(f"Health server running on port {port}")
-            httpd.serve_forever()
-    except Exception as e:
-        print(f"Server error: {e}")
+    with socketserver.TCPServer(("", port), handler) as httpd:
+        print(f"Health check server ready on port {port}")
+        httpd.serve_forever()
 
 threading.Thread(target=run_health_server, daemon=True).start()
 
-# تشغيل البوت
-print("Bot is running...")
-bot.polling(none_stop=True)
+# تشغيل البوت مع تنظيف الـ Webhook لتجنب خطأ 409 Conflict
+if __name__ == "__main__":
+    print("Bot Empire is starting...")
+    bot.remove_webhook()
+    # استخدام infinity_polling لضمان استمرارية العمل
+    bot.infinity_polling(timeout=20, long_polling_timeout=10)
