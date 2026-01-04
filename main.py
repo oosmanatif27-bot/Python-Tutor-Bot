@@ -186,3 +186,4 @@ if __name__ == "__main__":
     bot.remove_webhook()
     print("Bot Empire Educational System: LIVE")
     bot.infinity_polling()
+bot.polling(non_stop=True, skip_pending=True)
