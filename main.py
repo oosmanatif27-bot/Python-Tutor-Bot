@@ -12,8 +12,8 @@ bot = telebot.TeleBot(TOKEN)
 genai.configure(api_key=AI_KEY)
 
 # تأكد من وجود models/ قبل اسم الموديل
-model = genai.GenerativeModel(model_name='gemini-1.5-flash')
-
+#model = genai.GenerativeModel(model_name='gemini-1.5-flash')
+model = genai.GenerativeModel('gemini-1.0-pro')
 INSTRUCTION = """أنت مدرس بايثون محترف ولطيف. ابدأ من الصفر."""
 
 @bot.message_handler(commands=['start'])
@@ -38,4 +38,5 @@ threading.Thread(target=run_health_server, daemon=True).start()
 
 # السطر اللي كان فيه المشكلة.. تأكد من القوس في آخره!
 bot.polling(none_stop=True, timeout=90, long_polling_timeout=90)
+
 
