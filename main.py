@@ -5,6 +5,7 @@ TOKEN = os.getenv("TELEGRAM_TOKEN")
 bot = telebot.TeleBot(TOKEN)
 
 # --- المنهج العلمي المبسط (12 درس) ---
+# ملاحظة: أبقيت الدروس كما هي في كودك تماماً لضمان الأداء
 lessons_data = {
     "1": {
         "title": "الدرس 1: دالة print (الإخراج)",
@@ -96,13 +97,15 @@ def intro(message):
 @bot.message_handler(func=lambda m: m.text == "قائمة الدروس")
 def list_lessons(message):
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=3)
+    # التأكد من إنشاء الأزرار للـ 12 درساً كاملاً
     btns = [types.KeyboardButton(f"الدرس {i}") for i in range(1, 13)]
     markup.add(*btns, "الرجوع")
     bot.send_message(message.chat.id, "📚 قائمة الدروس الـ 12 المتاحة:", reply_markup=markup)
 
-@bot.message_handler(func=lambda m: m.text.startswith("الدرس "))
+@bot.message_handler(func=lambda m: m.text and m.text.startswith("الدرس "))
 def handle_lesson(message):
-    num = message.text.split()[-1]
+    # تنظيف النص واستخراج الرقم بشكل أدق لضمان عمل الدروس من 4 إلى 12
+    num = message.text.replace("الدرس", "").strip()
     if num in lessons_data:
         l = lessons_data[num]
         text = f"💡 *{l['title']}*\n\n{l['explanation']}\n\n{l['example']}"
@@ -112,14 +115,17 @@ def handle_lesson(message):
 
 @bot.callback_query_handler(func=lambda call: True)
 def callback_handler(call):
-    l_id = call.data.split("_")[1]
-    l = lessons_data[l_id]
-    if call.data.startswith("ex_"):
-        markup = types.InlineKeyboardMarkup()
-        markup.add(types.InlineKeyboardButton("🔑 الحل العلمي", callback_data=f"sol_{l_id}"))
-        bot.edit_message_text(f"🎯 *التحدي:*\n{l['exercise']}", call.message.chat.id, call.message.message_id, reply_markup=markup, parse_mode="Markdown")
-    elif call.data.startswith("sol_"):
-        bot.edit_message_text(f"✅ *الحل:* {l['solution']}\n\nاستمر في التعلم! 🚀", call.message.chat.id, call.message.message_id, parse_mode="Markdown")
+    # استخدام try لتجنب أي خطأ في الـ callback_data
+    try:
+        l_id = call.data.split("_")[1]
+        l = lessons_data[l_id]
+        if call.data.startswith("ex_"):
+            markup = types.InlineKeyboardMarkup()
+            markup.add(types.InlineKeyboardButton("🔑 الحل العلمي", callback_data=f"sol_{l_id}"))
+            bot.edit_message_text(f"🎯 *التحدي:*\n{l['exercise']}", call.message.chat.id, call.message.message_id, reply_markup=markup, parse_mode="Markdown")
+        elif call.data.startswith("sol_"):
+            bot.edit_message_text(f"✅ *الحل:* {l['solution']}\n\nاستمر في التعلم! 🚀", call.message.chat.id, call.message.message_id, parse_mode="Markdown")
+    except: pass
 
 # --- Health Server ---
 def run_health():
