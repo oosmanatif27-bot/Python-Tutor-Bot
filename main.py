@@ -51,29 +51,29 @@ lessons_data = {
         "title": "الدرس 7: الجمل الشرطية (If Statements)",
         "explanation": "مثل إشارة المرور 🚦؛ 'لو' اللون أحمر قف، 'لو' أخضر امشي. البرنامج يتخذ قرار بناءً على شرط.",
         "exercise": "التمرين: اكتب شرطاً يطبع 'ناجح' إذا كان `score` أكبر من 50.",
-        "solution": "```python\nif score > 50:\n    print(\"ناجح\")```"
+        "solution": "if score > 50:\n    print(\"ناجح\")"
     },
     "8": {
         "title": "الدرس 8: الحلقات التكرارية (Loops)",
         "explanation": "بدل ما تكرر الكود 100 مرة، الـ Loop مثل 'الآلة المكررة' 🔄 تسويها عنك في سطرين.",
         "exercise": "التمرين: اجعل البرنامج يطبع كلمة 'أهلاً' 3 مرات باستخدام `range`.",
-        "solution": "```python\nfor i in range(3):\n    print(\"أهلاً\")```"
+        "solution": "for i in range(3):\n    print(\"أهلاً\")"
     },
     "9": {
         "title": "الدرس 9: الدوال (Functions)",
-        "explanation": "هذا 'مصنع أكواد' 🏭. تصنع كود وتعطيه اسم (مثل `def`) وتستخدمه في أي وقت تبيه.",
+        "explanation": "هذا 'مصنع أكواد' 🏭. تصنع كود وتعطيه اسم وتستخدمه في أي وقت تبيه.",
         "exercise": "التمرين: اصنع دالة اسمها `say_hi` تطبع 'مرحباً'.",
-        "solution": "```python\ndef say_hi():\n    print(\"مرحباً\")```"
+        "solution": "def say_hi():\n    print(\"مرحباً\")"
     },
     "10": {
         "title": "الدرس 10: معالجة الأخطاء (Error Handling)",
         "explanation": "لو انكسرت اللعبة 🛠️، بنستخدم `try` و `except` عشان البرنامج ما يوقف ويقول لنا وش المشكلة بهدوء.",
         "exercise": "التمرين: جرب تقسيم 10 على 0 داخل `try`.",
-        "solution": "```python\ntry:\n    print(10/0)\nexcept:\n    print(\"خطأ!\")```"
+        "solution": "try:\n    print(10/0)\nexcept:\n    print(\"خطأ!\")"
     },
     "11": {
         "title": "الدرس 11: الملفات (Files)",
-        "explanation": "كيف تخلي البرنامج يكتب ذكرياته في 'دفتر مذكرات' 📝 (ملف خارجي) ويقرأ منها بعدين؟",
+        "explanation": "كيف تخلي البرنامج يكتب ذكرياته في 'دفتر مذكرات' 📝 ويقرأ منها بعدين؟",
         "exercise": "التمرين: افتح ملفاً اسمه `notes.txt` واكتب فيه 'مرحباً'.",
         "solution": "`with open(\"notes.txt\", \"w\") as f: f.write(\"مرحباً\")`"
     },
@@ -96,21 +96,20 @@ def welcome(message):
 
 @bot.message_handler(func=lambda m: m.text == "مقدمة بايثون")
 def intro(message):
-    text = """تعد لغة بايثون واحدة من أشهر وأقوى لغات البرمجة في العالم، صُممت لتكون سهلة القراءة وبسيطة مثل اللغة الإنجليزية. أصبحت اليوم الركيزة الأساسية في مجالات الذكاء الاصطناعي، تطوير الويب، والأمن السيبراني."""
-    bot.send_message(message.chat.id, text)
+    # استخدام علامات التنصيص الثلاثية لتجنب خطأ الـ Syntax السابق
+    intro_text = """تُعد بايثون (Python) لغة برمجة عالية المستوى، مفسرة، ومتعددة النماذج، تفرض سيطرتها كأقوى أداة في العالم البرمجي الحديث بفضل توازنها الفريد بين البساطة المتناهية والقوة الهيكلية. تعتمد اللغة في جوهرها على فلسفة "سهولة القراءة" عبر استخدام الإزاحة (Indentation) بدلاً من الأقواس المعقدة، مما يقلل الأخطاء المنطقية ويسرع عملية التطوير. وتتميز بنظام نوع ديناميكي (Dynamic Typing) ومكتبة قياسية ضخمة توفر حلولاً جاهزة لكل شيء بدءاً من تطوير الويب والذكاء الاصطناعي وصولاً إلى الأمن السيبراني وأتمتة الاختراق، مما يجعلها الخيار الأول للهاكرز والمبرمجين الذين يفضلون التركيز على حل المشكلات بدلاً من الانشغال بتعقيدات إدارة الذاكرة والعتاد."""
+    bot.send_message(message.chat.id, intro_text)
 
 @bot.message_handler(func=lambda m: m.text == "قائمة الدروس")
 def show_curriculum(message):
     markup = types.InlineKeyboardMarkup(row_width=4)
     btns = [types.InlineKeyboardButton(text=f"L{i}", callback_data=f"lesson_{i}") for i in range(1, 13)]
     markup.add(*btns)
-    bot.send_message(message.chat.id, "📚 **خارطة الطريق الخاصة بك:**\nاختر الدرس الذي تود تعلمه الآن:", reply_markup=markup, parse_mode="Markdown")
+    bot.send_message(message.chat.id, "📚 **خارطة الطريق:**\nاختر الدرس:", reply_markup=markup, parse_mode="Markdown")
 
-# --- معالجة الأزرار الشفافة ---
 @bot.callback_query_handler(func=lambda call: True)
 def handle_query(call):
     data = call.data
-    
     if data.startswith("lesson_"):
         l_id = data.split("_")[1]
         lesson = lessons_data[l_id]
@@ -118,7 +117,6 @@ def handle_query(call):
         markup = types.InlineKeyboardMarkup()
         markup.add(types.InlineKeyboardButton("🎯 ابدأ التحدي", callback_data=f"ex_{l_id}"))
         bot.edit_message_text(text, call.message.chat.id, call.message.message_id, reply_markup=markup, parse_mode="Markdown")
-
     elif data.startswith("ex_"):
         l_id = data.split("_")[1]
         lesson = lessons_data[l_id]
@@ -126,21 +124,22 @@ def handle_query(call):
         markup = types.InlineKeyboardMarkup()
         markup.add(types.InlineKeyboardButton("🔑 كشف الحل", callback_data=f"sol_{l_id}"))
         bot.edit_message_text(text, call.message.chat.id, call.message.message_id, reply_markup=markup, parse_mode="Markdown")
-
     elif data.startswith("sol_"):
         l_id = data.split("_")[1]
         lesson = lessons_data[l_id]
-        text = f"✅ *الحل الصحيح:*\n{lesson['solution']}\n\nأنت مبرمج ذكي جداً! 🚀 واصل تقدمك."
+        text = f"✅ *الحل الصحيح:*\n{lesson['solution']}\n\nأنت مبرمج ذكي! 🚀"
         bot.edit_message_text(text, call.message.chat.id, call.message.message_id, parse_mode="Markdown")
 
-# --- Health Check لـ Koyeb ---
+# --- سيرفر فحص الحالة لـ Koyeb ---
 def run_health():
-    socketserver.TCPServer(("", 8000), http.server.SimpleHTTPRequestHandler).serve_forever()
+    try:
+        server = socketserver.TCPServer(("", 8000), http.server.SimpleHTTPRequestHandler)
+        server.serve_forever()
+    except: pass
 
 threading.Thread(target=run_health, daemon=True).start()
 
-# --- التشغيل النهائي ---
 if __name__ == "__main__":
     bot.remove_webhook()
-    print("Bot is LIVE and Running...")
+    print("Bot is LIVE!")
     bot.infinity_polling(skip_pending=True)
