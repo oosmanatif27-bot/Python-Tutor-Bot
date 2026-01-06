@@ -1,93 +1,93 @@
 import os, telebot, threading, http.server, socketserver, time
 from telebot import types
 
-# التوكن حقك يا عثمانوو
+# التوكن حقك
 TOKEN = os.getenv("TELEGRAM_TOKEN")
 bot = telebot.TeleBot(TOKEN)
 
-# الدروس بدون أي رموز تسبب مشاكل (Markdown Safe) 💡
+# الدروس بأسلوب رسمي وعلمي للعامة 💡
 lessons_data = {
     "1": {
         "title": "الدرس 1: دالة print الإخراج 💡",
         "explanation": "هي لسان البرمجة الذي يعرض النتائج. نستخدمها لإخراج المعلومات.\n- للنصوص: نضعها بين علامات تنصيص.\n- للأرقام: نكتبها مباشرة بدون علامات.",
-        "example": "print('المستوى', 1)",
-        "exercise": "جرب تطبع اسمك Osman وجنبه رقمك المفضل 7 في أمر واحد.",
-        "solution": "print('Osman', 7)"
+        "example": "print('Hello World', 2024)",
+        "exercise": "جرب تطبع جملة Python Is Fun وجنبها رقم 100.",
+        "solution": "print('Python Is Fun', 100)"
     },
     "2": {
         "title": "الدرس 2: المتغيرات Variables 💡",
         "explanation": "هي صناديق تخزن فيها البيانات ونعطيها اسم.\n- نكتب الاسم ثم علامة = ثم القيمة.",
-        "example": "name = 'Osman'\nscore = 10",
+        "example": "username = 'User1'\nlevel = 5",
         "exercise": "عرف متغير باسم x وقيمته 50.",
         "solution": "x = 50"
     },
     "3": {
         "title": "الدرس 3: العمليات الحسابية Math 💡",
         "explanation": "بايثون شاطرة في الحساب!\n- الجمع (+)، الطرح (-)، الضرب (*)، القسمة (/).",
-        "example": "total = 10 + 5",
+        "example": "result = 10 + 5",
         "exercise": "احسب حاصل ضرب 5 في 4 واطبعه.",
         "solution": "print(5 * 4)"
     },
     "4": {
         "title": "الدرس 4: دالة input المدخلات 💡",
         "explanation": "تستخدم لسؤال المستخدم وطلب بيانات منه.\n- النص اللي داخل القوس هو السؤال.",
-        "example": "age = input('كم عمرك؟ ')",
-        "exercise": "اطلب من المستخدم إدخال اسمه وخزنه في متغير name.",
-        "solution": "name = input('ما اسمك؟')"
+        "example": "name = input('ادخل اسمك: ')",
+        "exercise": "اطلب من المستخدم إدخال عمره وخزنه في متغير age.",
+        "solution": "age = input('كم عمرك؟')"
     },
     "5": {
         "title": "الدرس 5: القوائم Lists 💡",
         "explanation": "صندوق واحد يحتوي على أشياء كثيرة مرتبة.\n- نستخدم الأقواس المربعة [ ] ونفصل بفاصلة.",
-        "example": "colors = ['أبيض', 'وردي']",
-        "exercise": "أنشئ قائمة باسم my_list فيها الأرقام 1، 2، 3.",
-        "solution": "my_list = [1, 2, 3]"
+        "example": "items = ['Apple', 'Banana']",
+        "exercise": "أنشئ قائمة باسم numbers فيها الأرقام 1، 2، 3.",
+        "solution": "numbers = [1, 2, 3]"
     },
     "6": {
         "title": "الدرس 6: القواميس Dictionaries 💡",
         "explanation": "تخزن البيانات كزوج مفتاح وقيمة.\n- نستخدم الأقواس { }.",
-        "example": "user = {'name': 'Osman', 'id': 1}",
-        "exercise": "أنشئ قاموس فيه المفتاح a وقيمته 1.",
-        "solution": "d = {'a': 1}"
+        "example": "data = {'id': 101, 'status': 'OK'}",
+        "exercise": "أنشئ قاموس فيه المفتاح key وقيمته 1.",
+        "solution": "d = {'key': 1}"
     },
     "7": {
         "title": "الدرس 7: الشروط If Statement 💡",
         "explanation": "تخلي البرنامج يتخذ قرار بناء على شرط.\n- إذا تحقق الشرط، ينفذ الكود اللي تحته.",
-        "example": "if score > 50:\n    print('ناجح')",
-        "exercise": "اكتب شرط إذا كان x يساوي 10 اطبع صح.",
-        "solution": "if x == 10:\n    print('صح')"
+        "example": "if score >= 50:\n    print('Pass')",
+        "exercise": "اكتب شرط إذا كان x يساوي 10 اطبع True.",
+        "solution": "if x == 10:\n    print('True')"
     },
     "8": {
         "title": "الدرس 8: التكرار Loops 💡",
         "explanation": "تستخدم لتنفيذ الكود عدة مرات.\n- for تمر على نطاق معين.",
-        "example": "for i in range(3):\n    print('يقين')",
-        "exercise": "اطبع كلمة Hello 5 مرات باستخدام loop.",
-        "solution": "for i in range(5):\n    print('Hello')"
+        "example": "for i in range(5):\n    print('Loading...')",
+        "exercise": "اطبع كلمة Welcome 3 مرات باستخدام loop.",
+        "solution": "for i in range(3):\n    print('Welcome')"
     },
     "9": {
         "title": "الدرس 9: الدوال Functions 💡",
         "explanation": "تجميع كود في اسم واحد لاستدعائه لاحقا.\n- نبدأ بكلمة def.",
-        "example": "def say_hi():\n    print('هلا نينو')",
-        "exercise": "عرف دالة اسمها start تطبع بدأنا.",
-        "solution": "def start():\n    print('بدأنا')"
+        "example": "def welcome():\n    print('مرحباً بك')",
+        "exercise": "عرف دالة اسمها start تطبع 'Run'.",
+        "solution": "def start():\n    print('Run')"
     },
     "10": {
         "title": "الدرس 10: معالجة الأخطاء Errors 💡",
         "explanation": "طريقة لمنع البرنامج من الانهيار.\n- نستخدم try و except.",
-        "example": "try:\n    print(10/0)\nexcept:\n    print('خطأ')",
+        "example": "try:\n    res = 10/0\nexcept:\n    print('Error')",
         "exercise": "استخدم try لمنع خطأ تقسيم 5 على 0.",
         "solution": "try: 5/0\nexcept: pass"
     },
     "11": {
         "title": "الدرس 11: التعامل مع الملفات Files 💡",
         "explanation": "القدرة على قراءة أو كتابة ملفات.\n- دالة open تستخدم للفتح.",
-        "example": "f = open('note.txt', 'r')",
+        "example": "f = open('test.txt', 'r')",
         "exercise": "افتح ملف باسم data.txt للقراءة.",
         "solution": "open('data.txt', 'r')"
     },
     "12": {
         "title": "الدرس 12: المكتبات Modules 💡",
         "explanation": "استدعاء أدوات جاهزة لبرنامجك.\n- نستخدم import.",
-        "example": "import math\nprint(math.sqrt(16))",
+        "example": "import math\nprint(math.pi)",
         "exercise": "استورد مكتبة time.",
         "solution": "import time"
     }
@@ -97,7 +97,7 @@ lessons_data = {
 def welcome(message):
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
     markup.add("قائمة الدروس")
-    bot.send_message(message.chat.id, "🚀 البوت يعمل الآن يا نينو! اختر من القائمة:", reply_markup=markup)
+    bot.send_message(message.chat.id, "🚀 مرحباً بك في بوت تعليم البرمجة! اختر من القائمة لبدء التعلم:", reply_markup=markup)
 
 @bot.message_handler(func=lambda m: m.text == "قائمة الدروس")
 def list_lessons(message):
@@ -111,8 +111,7 @@ def handle_lesson(message):
     num = "".join(filter(str.isdigit, message.text))
     l = lessons_data.get(num)
     if l:
-        # شلت النجمات من العناوين عشان ما يجي إيرور 400
-        text = f"{l['title']}\n\n{l['explanation']}\n\nمثال علمي:\n{l['example']}"
+        text = f"{l['title']}\n\n{l['explanation']}\n\nمثال توضيحي:\n{l['example']}"
         markup = types.InlineKeyboardMarkup()
         markup.add(types.InlineKeyboardButton("🎯 التحدي", callback_data=f"ex_{num}"))
         bot.send_message(message.chat.id, text, reply_markup=markup)
