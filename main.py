@@ -1,139 +1,82 @@
-import os, telebot, threading, http.server, socketserver
+import os, telebot, threading, http.server, socketserver, time
 from telebot import types
 
+# جلب التوكن من إعدادات كويب
 TOKEN = os.getenv("TELEGRAM_TOKEN")
 bot = telebot.TeleBot(TOKEN)
 
-# --- المنهج العلمي المبسط (12 درس) ---
-# ملاحظة: أبقيت الدروس كما هي في كودك تماماً لضمان الأداء
+# --- المنهج العلمي المبسط (12 درس كاملة) ---
 lessons_data = {
-    "1": {
-        "title": "الدرس 1: دالة print (الإخراج)",
-        "explanation": "هي لسان البرمجة الذي يعرض النتائج. نستخدمها لإخراج المعلومات.\n• للنصوص (String): نضعها بين علامات تنصيص `\" \"`.\n• للأرقام (Integer): نكتبها مباشرة بدون علامات.",
-        "example": "مثال علمي:\n`print(\"المستوى\", 1)`\nهنا دمجنا نص (String) مع رقم (Integer).",
-        "exercise": "اكتب كود يطبع اسمك ورقمك المفضل بجانبه.",
-        "solution": "`print(\"عثمان\", 7)`"
-    },
-    "2": {
-        "title": "الدرس 2: المتغيرات (Variables)",
-        "explanation": "هي مخازن في الذاكرة لها اسم ونوع. نستخدمها لحفظ البيانات.\n• المثال: `score = 10` هنا حفظنا القيمة 10 في متغير نوعه Integer.",
-        "exercise": "اصنع متغير اسمه `my_text` واحفظ فيه جملة 'أنا مبرمج'.",
-        "solution": "`my_text = \"أنا مبرمج\"`"
-    },
-    "3": {
-        "title": "الدرس 3: العمليات الحسابية (Operators)",
-        "explanation": "بايثون تنفذ الحساب بدقة عالية.\n• `+` جمع، `-` طرح، `*` ضرب، `/` قسمة.",
-        "exercise": "اكتب كود يطبع ناتج ضرب 10 في 10.",
-        "solution": "`print(10 * 10)`"
-    },
-    "4": {
-        "title": "الدرس 4: المدخلات (User Input)",
-        "explanation": "دالة `input` تسمح للبرنامج بسؤال المستخدم وانتظار الرد. النتيجة دائماً تكون نص (String).",
-        "exercise": "اسأل المستخدم عن لونه المفضل واحفظه في متغير `color`.",
-        "solution": "`color = input(\"ما لونك المفضل؟\")`"
-    },
-    "5": {
-        "title": "الدرس 5: القوائم (Lists)",
-        "explanation": "مجموعة عناصر مخزنة في مكان واحد. نصل لكل عنصر عبر رقمه (Index).",
-        "exercise": "اصنع قائمة باسم `tools` وضع فيها 'Laptop' و 'Mouse'.",
-        "solution": "`tools = [\"Laptop\", \"Mouse\"]`"
-    },
-    "6": {
-        "title": "الدرس 6: القواميس (Dictionaries)",
-        "explanation": "تخزين البيانات بنظام مفتاح وقيمة (Key-Value) لسهولة البحث.",
-        "exercise": "اصنع قاموساً فيه الاسم 'عثمان' والعمر 20.",
-        "solution": "`user = {\"name\": \"عثمان\", \"age\": 20}`"
-    },
-    "7": {
-        "title": "الدرس 7: الجمل الشرطية (If Statements)",
-        "explanation": "تسمح للبرنامج باتخاذ قرارات. 'لو' تحقق الشرط، نفذ الكود.",
-        "exercise": "اكتب شرطاً يطبع 'مسموح' إذا كان العمر أكبر من 18.",
-        "solution": "if age > 18:\n    print(\"مسموح\")"
-    },
-    "8": {
-        "title": "الدرس 8: الحلقات التكرارية (Loops)",
-        "explanation": "نستخدم `for` لتكرار مهمة معينة لعدد محدد من المرات بدلاً من كتابتها يدوياً.",
-        "exercise": "اطبع الأرقام من 0 إلى 4 باستخدام range.",
-        "solution": "for i in range(5):\n    print(i)"
-    },
-    "9": {
-        "title": "الدرس 9: الدوال (Functions)",
-        "explanation": "مجموعة أوامر نعطيها اسماً لنستخدمها لاحقاً. تبدأ بكلمة `def`.",
-        "exercise": "عرف دالة اسمها `greet` تطبع 'أهلاً بك'.",
-        "solution": "def greet():\n    print(\"أهلاً بك\")"
-    },
-    "10": {
-        "title": "الدرس 10: معالجة الأخطاء (Error Handling)",
-        "explanation": "نستخدم `try` و `except` لمنع البرنامج من التوقف عند حدوث خطأ مفاجئ.",
-        "exercise": "جرب كود يقسم 10 على 0 واحميه من الانهيار.",
-        "solution": "try:\n    print(10/0)\nexcept:\n    print(\"خطأ حسابي!\")"
-    },
-    "11": {
-        "title": "الدرس 11: التعامل مع الملفات (File I/O)",
-        "explanation": "بايثون تستطيع كتابة وقراءة نصوص من ملفات `.txt` خارجية.",
-        "exercise": "افتح ملفاً باسم 'data.txt' واكتب فيه 'بايثون قوية'.",
-        "solution": "with open(\"data.txt\", \"w\") as f:\n    f.write(\"بايثون قوية\")"
-    },
-    "12": {
-        "title": "الدرس 12: المكتبات (Modules)",
-        "explanation": "نستخدم `import` لجلب أدوات مبرمجة مسبقاً، مثل مكتبة `math` للحسابات المتقدمة.",
-        "exercise": "استورد مكتبة الوقت time.",
-        "solution": "import time"
-    }
+    "1": {"title": "الدرس 1: دالة print", "explanation": "دالة الإخراج للنصوص (String) والأرقام (Integer).", "example": "print('عثمان', 1)", "exercise": "اطبع اسمك ورقم 5.", "solution": "print('عثمان', 5)"},
+    "2": {"title": "الدرس 2: Variables", "explanation": "تخزين البيانات في الذاكرة باسم معين.", "example": "x = 10", "exercise": "خزن نص 'بايثون' في متغير a.", "solution": "a = 'بايثون'"},
+    "3": {"title": "الدرس 3: Math", "explanation": "العمليات الحسابية الأساسية (+, -, *, /).", "example": "print(5 + 5)", "exercise": "اجمع 100 و 200.", "solution": "print(100 + 200)"},
+    "4": {"title": "الدرس 4: Input", "explanation": "استقبال البيانات من المستخدم (تكون نصاً دائماً).", "example": "name = input('اسمك؟')", "exercise": "اسأل المستخدم عن بلده.", "solution": "country = input('بلدك؟')"},
+    "5": {"title": "الدرس 5: Lists", "explanation": "مجموعة عناصر مرتبة تبدأ من الفهرس 0.", "example": "L = [1, 2, 3]", "exercise": "اصنع قائمة فيها 'أ' و 'ب'.", "solution": "L = ['أ', 'ب']"},
+    "6": {"title": "الدرس 6: Dictionaries", "explanation": "بيانات بنظام مفتاح وقيمة Key-Value.", "example": "d = {'id': 1}", "exercise": "اصنع قاموساً فيه اسمك وعمرك.", "solution": "d = {'name': 'عثمان', 'age': 20}"},
+    "7": {"title": "الدرس 7: If Statements", "explanation": "اتخاذ القرارات البرمجية بناءً على شرط.", "example": "if x > 0: print('موجب')", "exercise": "اكتب شرطاً لو y يساوي 10.", "solution": "if y == 10: print('صح')"},
+    "8": {"title": "الدرس 8: Loops", "explanation": "تكرار الكود آلياً لعدد محدد من المرات.", "example": "for i in range(3): print(i)", "exercise": "كرر طباعة 'تم' 5 مرات.", "solution": "for i in range(5): print('تم')"},
+    "9": {"title": "الدرس 9: Functions", "explanation": "أكواد قابلة لإعادة الاستخدام تبدأ بـ def.", "example": "def my_func(): pass", "exercise": "عرف دالة باسم start.", "solution": "def start(): print('بدأنا')"},
+    "10": {"title": "الدرس 10: Errors", "explanation": "استخدام try و except لمنع انهيار البرنامج.", "example": "try: 1/0 except: pass", "exercise": "جرب كوداً داخل try.", "solution": "try: print(x) except: print('خطأ')"},
+    "11": {"title": "الدرس 11: Files", "explanation": "التعامل مع الملفات الخارجية (قراءة وكتابة).", "example": "open('test.txt', 'r')", "exercise": "افتح ملفاً للكتابة باسم a.txt.", "solution": "f = open('a.txt', 'w')"},
+    "12": {"title": "الدرس 12: Modules", "explanation": "استيراد مكتبات وأدوات مبرمجة مسبقاً.", "example": "import math", "exercise": "استورد مكتبة الوقت time.", "solution": "import time"}
 }
 
-# --- إدارة الرسائل ---
+# --- إدارة الرسائل والقوائم ---
+
 @bot.message_handler(commands=['start'])
 def welcome(message):
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=2)
     markup.add("مقدمة بايثون", "قائمة الدروس")
-    bot.send_message(message.chat.id, "🚀 مرحباً بك في أكاديمية البرمجة الذكية!\nاختر من الأزرار لبدء التعلم:", reply_markup=markup)
+    bot.send_message(message.chat.id, "🚀 أهلاً بك! أنا مدرب بايثون الخاص بك.\nاختر 'قائمة الدروس' لتبدأ:", reply_markup=markup)
 
 @bot.message_handler(func=lambda m: m.text == "مقدمة بايثون")
 def intro(message):
-    text = """تُعد بايثون (Python) لغة برمجة عالية المستوى، تمتاز بالبساطة والقوة. تُستخدم في الذكاء الاصطناعي، الأمن السيبراني، وتطوير التطبيقات."""
+    text = "بايثون لغة برمجة قوية وسهلة، تُستخدم في صنع الألعاب والذكاء الاصطناعي."
     bot.send_message(message.chat.id, text)
 
 @bot.message_handler(func=lambda m: m.text == "قائمة الدروس")
 def list_lessons(message):
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=3)
-    # التأكد من إنشاء الأزرار للـ 12 درساً كاملاً
+    # توليد الأزرار لجميع الدروس الـ 12
     btns = [types.KeyboardButton(f"الدرس {i}") for i in range(1, 13)]
-    markup.add(*btns, "الرجوع")
-    bot.send_message(message.chat.id, "📚 قائمة الدروس الـ 12 المتاحة:", reply_markup=markup)
+    markup.add(*btns, "الرجوع للقائمة الرئيسية")
+    bot.send_message(message.chat.id, "📚 اختر الدرس الذي تريد تعلمه:", reply_markup=markup)
 
 @bot.message_handler(func=lambda m: m.text and m.text.startswith("الدرس "))
-def handle_lesson(message):
-    # تنظيف النص واستخراج الرقم بشكل أدق لضمان عمل الدروس من 4 إلى 12
-    num = message.text.replace("الدرس", "").strip()
+def open_lesson(message):
+    # استخراج الرقم فقط من النص (مثل 'الدرس 4' -> '4')
+    num = "".join(filter(str.isdigit, message.text))
     if num in lessons_data:
         l = lessons_data[num]
-        text = f"💡 *{l['title']}*\n\n{l['explanation']}\n\n{l['example']}"
         markup = types.InlineKeyboardMarkup()
-        markup.add(types.InlineKeyboardButton("🎯 تحدي الدرس", callback_data=f"ex_{num}"))
-        bot.send_message(message.chat.id, text, reply_markup=markup, parse_mode="Markdown")
+        markup.add(types.InlineKeyboardButton("🎯 ابدأ التحدي", callback_data=f"ex_{num}"))
+        bot.send_message(message.chat.id, f"💡 *{l['title']}*\n\n{l['explanation']}\n\n*مثال:*\n`{l['example']}`", reply_markup=markup, parse_mode="Markdown")
 
 @bot.callback_query_handler(func=lambda call: True)
-def callback_handler(call):
-    # استخدام try لتجنب أي خطأ في الـ callback_data
-    try:
-        l_id = call.data.split("_")[1]
-        l = lessons_data[l_id]
-        if call.data.startswith("ex_"):
-            markup = types.InlineKeyboardMarkup()
-            markup.add(types.InlineKeyboardButton("🔑 الحل العلمي", callback_data=f"sol_{l_id}"))
-            bot.edit_message_text(f"🎯 *التحدي:*\n{l['exercise']}", call.message.chat.id, call.message.message_id, reply_markup=markup, parse_mode="Markdown")
-        elif call.data.startswith("sol_"):
-            bot.edit_message_text(f"✅ *الحل:* {l['solution']}\n\nاستمر في التعلم! 🚀", call.message.chat.id, call.message.message_id, parse_mode="Markdown")
-    except: pass
+def query_handler(call):
+    l_id = call.data.split("_")[1]
+    l = lessons_data[l_id]
+    if call.data.startswith("ex_"):
+        markup = types.InlineKeyboardMarkup()
+        markup.add(types.InlineKeyboardButton("🔑 كشف الحل", callback_data=f"sol_{l_id}"))
+        bot.edit_message_text(f"🎯 *التحدي:*\n{l['exercise']}", call.message.chat.id, call.message.message_id, reply_markup=markup, parse_mode="Markdown")
+    elif call.data.startswith("sol_"):
+        bot.edit_message_text(f"✅ *الحل العلمي:*\n`{l['solution']}`\n\nأحسنت يا بطل! 🚀", call.message.chat.id, call.message.message_id, parse_mode="Markdown")
 
-# --- Health Server ---
+# --- نظام الحماية والتشغيل ---
+
 def run_health():
     try: socketserver.TCPServer(("", 8000), http.server.SimpleHTTPRequestHandler).serve_forever()
     except: pass
 
-threading.Thread(target=run_health, daemon=True).start()
-
 if __name__ == "__main__":
-    bot.remove_webhook()
-    bot.infinity_polling(skip_pending=True)
+    threading.Thread(target=run_health, daemon=True).start()
+    
+    # حل مشكلة الـ Conflict بتنظيف الجلسة والانتظار
+    try:
+        bot.remove_webhook()
+        time.sleep(2) 
+        print("✅ البوت يعمل الآن بنجاح!")
+        bot.infinity_polling(skip_pending=True)
+    except Exception as e:
+        print(f"❌ خطأ: {e}")
