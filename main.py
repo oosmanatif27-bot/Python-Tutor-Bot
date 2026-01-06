@@ -1,16 +1,16 @@
 import os, telebot, threading, http.server, socketserver, time
 from telebot import types
 
-# التوكن حقك يا عثمان
+# التوكن حقك يا عثمانوو
 TOKEN = os.getenv("TELEGRAM_TOKEN")
 bot = telebot.TeleBot(TOKEN)
 
-# الدروس بالطريقة التعليمية اللي طلبتها يا عثمانوو 💡
+# الدروس بالطريقة التعليمية المرتبة 💡
 lessons_data = {
     "1": {
         "title": "💡 الدرس 1: دالة print (الإخراج)",
         "explanation": "هي لسان البرمجة الذي يعرض النتائج. نستخدمها لإخراج المعلومات.\n• للنصوص (String): نضعها بين علامات تنصيص \" \".\n• للأرقام (Integer): نكتبها مباشرة بدون علامات.",
-        "example": "print(\"المستوى\", 1)\n# دمجنا نص مع رقم",
+        "example": "print(\"المستوى\", 1)",
         "exercise": "جرب تطبع اسمك 'Osman' وجنبه رقمك المفضل 7 في أمر واحد.",
         "solution": "print('Osman', 7)"
     },
@@ -24,7 +24,7 @@ lessons_data = {
     "3": {
         "title": "💡 الدرس 3: العمليات الحسابية (Math)",
         "explanation": "بايثون شاطرة في الحساب!\n• الجمع (+)، الطرح (-)، الضرب (*)، القسمة (/).",
-        "example": "total = 10 + (5 * 2)",
+        "example": "total = 10 + 5",
         "exercise": "احسب حاصل ضرب 5 في 4 واطبعه.",
         "solution": "print(5 * 4)"
     },
@@ -59,7 +59,7 @@ lessons_data = {
     "8": {
         "title": "💡 الدرس 8: التكرار (Loops)",
         "explanation": "تستخدم لتنفيذ الكود عدة مرات دون تكرار كتابته.\n• for تمر على عناصر محددة أو نطاق معين.",
-        "example": "for i in range(3):\n    print(\"يقين\")",
+        "example": "for i in range(3):\n    print(\"أحمد\")",
         "exercise": "اطبع كلمة 'Hello' 5 مرات باستخدام for loop.",
         "solution": "for i in range(5):\n    print('Hello')"
     },
@@ -109,7 +109,7 @@ def list_lessons(message):
 @bot.message_handler(func=lambda m: m.text and m.text.startswith("الدرس "))
 def handle_lesson(message):
     num = "".join(filter(str.isdigit, message.text))
-    l = lessons_data.get(num, {})
+    l = lessons_data.get(num)
     if l:
         text = f"*{l['title']}*\n\n{l['explanation']}\n\n💻 *مثال علمي:*\n`{l['example']}`"
         markup = types.InlineKeyboardMarkup()
@@ -119,23 +119,28 @@ def handle_lesson(message):
 @bot.callback_query_handler(func=lambda call: True)
 def callback_handler(call):
     data = call.data.split("_")
+    action = data[0]
     l_id = data[1]
-    l = lessons_data.get(l_id, {})
-    if data[0] == "ex":
-        markup = types.InlineKeyboardMarkup()
-        markup.add(types.InlineKeyboardButton("🔑 الحل", callback_data=f"sol_{l_id}"))
-        bot.edit_message_text(f"🎯 *التحدي:*\n{l['exercise']}", call.message.chat.id, call.message.message_id, reply_markup=markup, parse_mode="Markdown")
-    elif data[0] == "sol":
-        bot.edit_message_text(f"✅ *الحل:*\n`{l['solution']}`", call.message.chat.id, call.message.message_id, parse_mode="Markdown")
+    l = lessons_data.get(l_id)
+    
+    if l:
+        if action == "ex":
+            markup = types.InlineKeyboardMarkup()
+            markup.add(types.InlineKeyboardButton("🔑 الحل", callback_data=f"sol_{l_id}"))
+            bot.edit_message_text(f"🎯 *التحدي:*\n{l['exercise']}", call.message.chat.id, call.message.message_id, reply_markup=markup, parse_mode="Markdown")
+        elif action == "sol":
+            bot.edit_message_text(f"✅ *الحل:*\n`{l['solution']}`", call.message.chat.id, call.message.message_id, parse_mode="Markdown")
 
 def run_health():
-    try: socketserver.TCPServer(("", 8000), http.server.SimpleHTTPRequestHandler).serve_forever()
-    except: pass
+    try:
+        server = socketserver.TCPServer(("", 8000), http.server.SimpleHTTPRequestHandler)
+        server.serve_forever()
+    except:
+        pass
 
 if __name__ == "__main__":
     threading.Thread(target=run_health, daemon=True).start()
-    bot.remove_webhook() 
+    bot.remove_webhook()
     time.sleep(1)
     print("🚀 Bot is Online!")
     bot.infinity_polling(skip_pending=True)
-
