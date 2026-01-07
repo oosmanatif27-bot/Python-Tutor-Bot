@@ -118,8 +118,14 @@ def run_health():
         def do_GET(self): self.send_response(200); self.end_headers(); self.wfile.write(b"OK")
     with socketserver.TCPServer(("", 8000), H) as d: d.serve_forever()
 
+
 if __name__ == "__main__":
     threading.Thread(target=run_health, daemon=True).start()
-    threading.Thread(target=safe_poll, args=(bot_py, "Python"), daemon=True).start()
-    print("🚀 All Bots Combined and Ready!")
-    safe_poll(bot_cpp, "C++")
+    
+    # شغل C++ الأول في Thread مستقل
+    threading.Thread(target=lambda: bot_cpp.infinity_polling(skip_pending=True), daemon=True).start()
+    
+    print("🚀 Testing C++ First...")
+    
+    # شغل بايثون هو الأساسي
+    bot_py.infinity_polling(skip_pending=True)
