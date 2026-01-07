@@ -1,146 +1,119 @@
 import os, telebot, threading, http.server, socketserver, time
 from telebot import types
 
-# التوكن حقك
-TOKEN = os.getenv("TELEGRAM_TOKEN")
-bot = telebot.TeleBot(TOKEN)
+# --- إعدادات التوكنات ---
+TOKEN_PY = os.getenv("TELEGRAM_TOKEN")   # توكن بوت بايثون
+TOKEN_CPP = os.getenv("TELEGRAM_TOKEN2") # توكن بوت C++
 
-# الدروس بأسلوب رسمي وعلمي للعامة 💡
-lessons_data = {
-    "1": {
-        "title": "الدرس 1: دالة print الإخراج 💡",
-        "explanation": "هي لسان البرمجة الذي يعرض النتائج. نستخدمها لإخراج المعلومات.\n- للنصوص: نضعها بين علامات تنصيص.\n- للأرقام: نكتبها مباشرة بدون علامات.",
-        "example": "print('Hello World', 2024)",
-        "exercise": "جرب تطبع جملة Python Is Fun وجنبها رقم 100.",
-        "solution": "print('Python Is Fun', 100)"
-    },
-    "2": {
-        "title": "الدرس 2: المتغيرات Variables 💡",
-        "explanation": "هي صناديق تخزن فيها البيانات ونعطيها اسم.\n- نكتب الاسم ثم علامة = ثم القيمة.",
-        "example": "username = 'User1'\nlevel = 5",
-        "exercise": "عرف متغير باسم x وقيمته 50.",
-        "solution": "x = 50"
-    },
-    "3": {
-        "title": "الدرس 3: العمليات الحسابية Math 💡",
-        "explanation": "بايثون شاطرة في الحساب!\n- الجمع (+)، الطرح (-)، الضرب (*)، القسمة (/).",
-        "example": "result = 10 + 5",
-        "exercise": "احسب حاصل ضرب 5 في 4 واطبعه.",
-        "solution": "print(5 * 4)"
-    },
-    "4": {
-        "title": "الدرس 4: دالة input المدخلات 💡",
-        "explanation": "تستخدم لسؤال المستخدم وطلب بيانات منه.\n- النص اللي داخل القوس هو السؤال.",
-        "example": "name = input('ادخل اسمك: ')",
-        "exercise": "اطلب من المستخدم إدخال عمره وخزنه في متغير age.",
-        "solution": "age = input('كم عمرك؟')"
-    },
-    "5": {
-        "title": "الدرس 5: القوائم Lists 💡",
-        "explanation": "صندوق واحد يحتوي على أشياء كثيرة مرتبة.\n- نستخدم الأقواس المربعة [ ] ونفصل بفاصلة.",
-        "example": "items = ['Apple', 'Banana']",
-        "exercise": "أنشئ قائمة باسم numbers فيها الأرقام 1، 2، 3.",
-        "solution": "numbers = [1, 2, 3]"
-    },
-    "6": {
-        "title": "الدرس 6: القواميس Dictionaries 💡",
-        "explanation": "تخزن البيانات كزوج مفتاح وقيمة.\n- نستخدم الأقواس { }.",
-        "example": "data = {'id': 101, 'status': 'OK'}",
-        "exercise": "أنشئ قاموس فيه المفتاح key وقيمته 1.",
-        "solution": "d = {'key': 1}"
-    },
-    "7": {
-        "title": "الدرس 7: الشروط If Statement 💡",
-        "explanation": "تخلي البرنامج يتخذ قرار بناء على شرط.\n- إذا تحقق الشرط، ينفذ الكود اللي تحته.",
-        "example": "if score >= 50:\n    print('Pass')",
-        "exercise": "اكتب شرط إذا كان x يساوي 10 اطبع True.",
-        "solution": "if x == 10:\n    print('True')"
-    },
-    "8": {
-        "title": "الدرس 8: التكرار Loops 💡",
-        "explanation": "تستخدم لتنفيذ الكود عدة مرات.\n- for تمر على نطاق معين.",
-        "example": "for i in range(5):\n    print('Loading...')",
-        "exercise": "اطبع كلمة Welcome 3 مرات باستخدام loop.",
-        "solution": "for i in range(3):\n    print('Welcome')"
-    },
-    "9": {
-        "title": "الدرس 9: الدوال Functions 💡",
-        "explanation": "تجميع كود في اسم واحد لاستدعائه لاحقا.\n- نبدأ بكلمة def.",
-        "example": "def welcome():\n    print('مرحباً بك')",
-        "exercise": "عرف دالة اسمها start تطبع 'Run'.",
-        "solution": "def start():\n    print('Run')"
-    },
-    "10": {
-        "title": "الدرس 10: معالجة الأخطاء Errors 💡",
-        "explanation": "طريقة لمنع البرنامج من الانهيار.\n- نستخدم try و except.",
-        "example": "try:\n    res = 10/0\nexcept:\n    print('Error')",
-        "exercise": "استخدم try لمنع خطأ تقسيم 5 على 0.",
-        "solution": "try: 5/0\nexcept: pass"
-    },
-    "11": {
-        "title": "الدرس 11: التعامل مع الملفات Files 💡",
-        "explanation": "القدرة على قراءة أو كتابة ملفات.\n- دالة open تستخدم للفتح.",
-        "example": "f = open('test.txt', 'r')",
-        "exercise": "افتح ملف باسم data.txt للقراءة.",
-        "solution": "open('data.txt', 'r')"
-    },
-    "12": {
-        "title": "الدرس 12: المكتبات Modules 💡",
-        "explanation": "استدعاء أدوات جاهزة لبرنامجك.\n- نستخدم import.",
-        "example": "import math\nprint(math.pi)",
-        "exercise": "استورد مكتبة time.",
-        "solution": "import time"
-    }
+bot_py = telebot.TeleBot(TOKEN_PY)
+bot_cpp = telebot.TeleBot(TOKEN_CPP)
+
+user_warnings_cpp = {} # عداد لبوت C++
+
+# --- قاعدة بيانات دروس بايثون (12 درس) ---
+lessons_py = {
+    "1": {"title": "الدرس 1: دالة print 💡", "explanation": "عرض النتائج.", "example": "print('Hi')", "exercise": "اطبع Python", "solution": "print('Python')"},
+    "2": {"title": "الدرس 2: المتغيرات 💡", "explanation": "تخزين البيانات.", "example": "x = 5", "exercise": "عرف x بـ 10", "solution": "x = 10"},
+    "3": {"title": "الدرس 3: الحساب 💡", "explanation": "الجمع والطرح.", "example": "1+1", "exercise": "اضرب 2 في 3", "solution": "print(2*3)"},
+    "4": {"title": "الدرس 4: المدخلات 💡", "explanation": "سؤال المستخدم.", "example": "input()", "exercise": "اطلب العمر", "solution": "age = input()"},
+    "5": {"title": "الدرس 5: القوائم 💡", "explanation": "صندوق بيانات.", "example": "[1,2]", "exercise": "أنشئ قائمة", "solution": "L = [1]"},
+    "6": {"title": "الدرس 6: القواميس 💡", "explanation": "مفتاح وقيمة.", "example": "{'a':1}", "exercise": "أنشئ قاموس", "solution": "d = {'id':1}"},
+    "7": {"title": "الدرس 7: الشروط 💡", "explanation": "اتخاذ قرار.", "example": "if x > 0:", "exercise": "شرط x يساوي 5", "solution": "if x == 5:"},
+    "8": {"title": "الدرس 8: التكرار 💡", "explanation": "تنفيذ مكرر.", "example": "for i in range(5):", "exercise": "كرر 3 مرات", "solution": "for i in range(3):"},
+    "9": {"title": "الدرس 9: الدوال 💡", "explanation": "تجميع الكود.", "example": "def f():", "exercise": "عرف دالة", "solution": "def start():"},
+    "10": {"title": "الدرس 10: الأخطاء 💡", "explanation": "منع الانهيار.", "example": "try:", "exercise": "استخدم try", "solution": "try: pass"},
+    "11": {"title": "الدرس 11: الملفات 💡", "explanation": "قراءة ملف.", "example": "open('f.txt')", "exercise": "افتح ملف", "solution": "open('d.txt')"},
+    "12": {"title": "الدرس 12: المكتبات 💡", "explanation": "أدوات جاهزة.", "example": "import math", "exercise": "استورد time", "solution": "import time"}
 }
 
-@bot.message_handler(commands=['start'])
-def welcome(message):
-    markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-    markup.add("قائمة الدروس")
-    bot.send_message(message.chat.id, "🚀 مرحباً بك في بوت تعليم البرمجة! اختر من القائمة لبدء التعلم:", reply_markup=markup)
+# --- قاعدة بيانات دروس C++ (14 درس) ---
+lessons_cpp = {
+    "1": {"title": "🏛️ 1: هيكل البرنامج", "explanation": "المكتبات ودالة main.", "example": "int main() { }", "exercise": "اكتب الهيكل", "solution": "int main() { return 0; }"},
+    "2": {"title": "📥 2: الطباعة والإدخال", "explanation": "cout و cin.", "example": "cin >> x;", "exercise": "استقبل رقم", "solution": "cin >> num;"},
+    "3": {"title": "📦 3: أنواع البيانات", "explanation": "int, char, bool.", "example": "bool ok = true;", "exercise": "عرف bool", "solution": "bool x = true;"},
+    "4": {"title": "➗ 4: العمليات الحسابية", "explanation": "الجمع وباقي القسمة %.", "example": "10 % 3", "exercise": "احسب باقي 5/2", "solution": "5 % 2"},
+    "5": {"title": "⚖️ 5: الجمل الشرطية", "explanation": "if, else, switch.", "example": "switch(x) { }", "exercise": "شرط x اكبر من 0", "solution": "if(x>0){}"},
+    "6": {"title": "🔄 6: الحلقات التكرارية", "explanation": "for, while.", "example": "for(int i=0; i<5; i++)", "exercise": "حلقة تكرار 10", "solution": "for(int i=0; i<10; i++)"},
+    "7": {"title": "📊 7: المصفوفات", "explanation": "تخزين متسلسل.", "example": "int arr[5];", "exercise": "عرف مصفوفة 3", "solution": "int a[3];"},
+    "8": {"title": "🔤 8: النصوص", "explanation": "مكتبة string.", "example": "string s = 'Hi';", "exercise": "عرف نص", "solution": "string s;"},
+    "9": {"title": "⚙️ 9: الدوال", "explanation": "تنظيم الكود.", "example": "void f() { }", "exercise": "عرف دالة void", "solution": "void run() { }"},
+    "10": {"title": "🎯 10: المؤشرات (Pointers)", "explanation": "عناوين الذاكرة (هام للأمن).", "example": "int* p = &x;", "exercise": "عرف مؤشر ptr", "solution": "int* ptr;"},
+    "11": {"title": "🔗 11: المراجع", "explanation": "اسم مستعار للمتغير.", "example": "int &r = x;", "exercise": "عرف مرجع", "solution": "int &ref = y;"},
+    "12": {"title": "🧠 12: إدارة الذاكرة", "explanation": "new و delete.", "example": "int* p = new int;", "exercise": "احجز ذاكرة", "solution": "new int;"},
+    "13": {"title": "🏗️ 13: الهياكل (Structs)", "explanation": "تجميع بيانات.", "example": "struct D { };", "exercise": "عرف struct", "solution": "struct S { };"},
+    "14": {"title": "💎 14: الأصناف (OOP)", "explanation": "الكلاسات والكائنات.", "example": "class C { };", "exercise": "عرف كلاس", "solution": "class A { };"}
+}
 
-@bot.message_handler(func=lambda m: m.text == "قائمة الدروس")
-def list_lessons(message):
+# --- منطق بوت البايثون ---
+@bot_py.message_handler(commands=['start'])
+def py_start(m):
+    markup = types.ReplyKeyboardMarkup(resize_keyboard=True).add("قائمة الدروس")
+    bot_py.send_message(m.chat.id, "🚀 بوت تعليم بايثون جاهز!", reply_markup=markup)
+
+@bot_py.message_handler(func=lambda m: m.text == "قائمة الدروس")
+def py_list(m):
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=3)
-    btns = [types.KeyboardButton(f"الدرس {i}") for i in range(1, 13)]
-    markup.add(*btns)
-    bot.send_message(message.chat.id, "📚 اختر الدرس الذي تريد تعلمه:", reply_markup=markup)
+    markup.add(*[types.KeyboardButton(f"الدرس {i}") for i in range(1, 13)])
+    bot_py.send_message(m.chat.id, "📚 اختر درس بايثون:", reply_markup=markup)
 
-@bot.message_handler(func=lambda m: m.text and m.text.startswith("الدرس "))
-def handle_lesson(message):
-    num = "".join(filter(str.isdigit, message.text))
-    l = lessons_data.get(num)
+@bot_py.message_handler(func=lambda m: m.text.startswith("الدرس "))
+def py_h(m):
+    num = "".join(filter(str.isdigit, m.text))
+    l = lessons_py.get(num)
     if l:
-        text = f"{l['title']}\n\n{l['explanation']}\n\nمثال توضيحي:\n{l['example']}"
-        markup = types.InlineKeyboardMarkup()
-        markup.add(types.InlineKeyboardButton("🎯 التحدي", callback_data=f"ex_{num}"))
-        bot.send_message(message.chat.id, text, reply_markup=markup)
+        txt = f"<b>{l['title']}</b>\n\n{l['explanation']}\n\n<code>{l['example']}</code>"
+        mk = types.InlineKeyboardMarkup().add(types.InlineKeyboardButton("🎯 التحدي", callback_data=f"pyex_{num}"))
+        bot_py.send_message(m.chat.id, txt, parse_mode="HTML", reply_markup=mk)
 
-@bot.callback_query_handler(func=lambda call: True)
-def callback_handler(call):
-    data = call.data.split("_")
-    action = data[0]
-    l_id = data[1]
-    l = lessons_data.get(l_id)
-    
+# --- منطق بوت C++ ---
+@bot_cpp.message_handler(commands=['start'])
+def cpp_start(m):
+    user_warnings_cpp[m.chat.id] = 0
+    markup = types.ReplyKeyboardMarkup(resize_keyboard=True).add("📚 قائمة دروس C++")
+    bot_cpp.send_message(m.chat.id, "👋 مرحباً بك في دورة C++!", reply_markup=markup)
+
+@bot_cpp.message_handler(func=lambda m: m.text == "📚 قائمة دروس C++")
+def cpp_list(m):
+    markup = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=3)
+    markup.add(*[types.KeyboardButton(f"الدرس {i}") for i in range(1, 15)])
+    bot_cpp.send_message(m.chat.id, "اختر درس C++:", reply_markup=markup)
+
+@bot_cpp.message_handler(func=lambda m: m.text.startswith("الدرس "))
+def cpp_h(m):
+    num = "".join(filter(str.isdigit, m.text))
+    l = lessons_cpp.get(num)
     if l:
-        if action == "ex":
-            markup = types.InlineKeyboardMarkup()
-            markup.add(types.InlineKeyboardButton("🔑 الحل", callback_data=f"sol_{l_id}"))
-            bot.edit_message_text(f"التحدي:\n{l['exercise']}", call.message.chat.id, call.message.message_id, reply_markup=markup)
-        elif action == "sol":
-            bot.edit_message_text(f"الحل:\n{l['solution']}", call.message.chat.id, call.message.message_id)
+        txt = f"<b>{l['title']}</b>\n\n{l['explanation']}\n\n<code>{l['example']}</code>"
+        mk = types.InlineKeyboardMarkup().add(types.InlineKeyboardButton("🎯 التحدي", callback_data=f"cppex_{num}"))
+        bot_cpp.send_message(m.chat.id, txt, parse_mode="HTML", reply_markup=mk)
 
+# --- معالج الأزرار (Inline) للكل ---
+@bot_py.callback_query_handler(func=lambda c: c.data.startswith("py"))
+def py_callback(c):
+    act, n = c.data.split("_")
+    l = lessons_py.get(n)
+    if act == "pyex":
+        mk = types.InlineKeyboardMarkup().add(types.InlineKeyboardButton("🔑 الحل", callback_data=f"pysol_{n}"))
+        bot_py.edit_message_text(f"🎯 التحدي:\n{l['exercise']}", c.message.chat.id, c.message.message_id, reply_markup=mk)
+    else: bot_py.edit_message_text(f"✅ الحل:\n<code>{l['solution']}</code>", c.message.chat.id, c.message.message_id, parse_mode="HTML")
+
+@bot_cpp.callback_query_handler(func=lambda c: c.data.startswith("cpp"))
+def cpp_callback(c):
+    act, n = c.data.split("_")
+    l = lessons_cpp.get(n)
+    if act == "cppex":
+        mk = types.InlineKeyboardMarkup().add(types.InlineKeyboardButton("🔑 الحل", callback_data=f"cppsol_{n}"))
+        bot_cpp.edit_message_text(f"🎯 التحدي:\n{l['exercise']}", c.message.chat.id, c.message.message_id, reply_markup=mk)
+    else: bot_cpp.edit_message_text(f"✅ الحل:\n<code>{l['solution']}</code>", c.message.chat.id, c.message.message_id, parse_mode="HTML")
+
+# --- نظام الحماية والتشغيل ---
 def run_health():
-    try:
-        server = socketserver.TCPServer(("", 8000), http.server.SimpleHTTPRequestHandler)
-        server.serve_forever()
-    except:
-        pass
+    class H(http.server.SimpleHTTPRequestHandler):
+        def do_GET(self): self.send_response(200); self.end_headers(); self.wfile.write(b"OK")
+    with socketserver.TCPServer(("", 8000), H) as httpd: httpd.serve_forever()
 
 if __name__ == "__main__":
-    threading.Thread(target=run_health, daemon=True).start()
-    bot.remove_webhook()
-    time.sleep(1)
-    print("🚀 Bot is Online!")
-    bot.infinity_polling(skip_pending=True)
+    threading.Thread(target=run_health, daemon=True).start() # تشغيل سيرفر الإنقاذ
+    threading.Thread(target=lambda: bot_py.infinity_polling(skip_pending=True), daemon=True).start() # بوت بايثون
+    print("🚀 Both Bots are Running on Koyeb!")
+    bot_cpp.infinity_polling(skip_pending=True) # بوت C++
