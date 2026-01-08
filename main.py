@@ -1,14 +1,14 @@
 import os, telebot, threading, http.server, socketserver, time, html
 from telebot import types
 
-# جلب التوكنات من Koyeb
+# جلب التوكنات من البيئة المحيطة (Koyeb)
 TOKEN_PY = os.getenv("TELEGRAM_TOKEN")   
 TOKEN_CPP = os.getenv("TELEGRAM_TOKEN2") 
 
 bot_py = telebot.TeleBot(TOKEN_PY)
 bot_cpp = telebot.TeleBot(TOKEN_CPP)
 
-# --- 🐍 دروس بايثون الوافية (12 درس) ---
+# --- 🐍 دروس بايثون الوافية (نفس محتواك تماماً) ---
 lessons_py = {
     "1": {"title": "الدرس 1: الطباعة (print) 🐍", "explanation": "تعتبر دالة print هي أول خطوة لتعلم أي لغة، ووظيفتها عرض النصوص والنتائج للمستخدم على الشاشة.", "example": "print('مرحباً بك في عالم بايثون')", "exercise": "اطبع اسمك الثلاثي باستخدام دالة print.", "solution": "print('عثمان ... ...')"},
     "2": {"title": "الدرس 2: المتغيرات (Variables) 📦", "explanation": "المتغيرات هي مخازن في الذاكرة نحفظ فيها البيانات (أرقام أو نصوص) لنستخدمها لاحقاً في الكود.", "example": "name = 'Osman'\nage = 20", "exercise": "عرف متغير باسم country وضع فيه اسم بلدك.", "solution": "country = 'Saudi Arabia'"},
@@ -24,7 +24,7 @@ lessons_py = {
     "12": {"title": "الدرس 12: المكتبات (Modules) 📦", "explanation": "يمكنك استيراد أكواد جاهزة كتبها مبرمجون آخرون لتوفير الوقت، مثل مكتبة math أو time.", "example": "import math\nprint(math.pi)", "exercise": "استورد مكتبة random.", "solution": "import random"}
 }
 
-# --- 🦾 دروس C++ الاحترافية (14 درس) ---
+# --- 🦾 دروس C++ الاحترافية (نفس محتواك تماماً) ---
 lessons_cpp = {
     "1": {"title": "🏛️ الدرس 1: الهيكل الأساسي", "explanation": "كل برنامج C++ يجب أن يبدأ بتضمين المكتبات ودالة main التي يبدأ من عندها التنفيذ.", "example": "#include <iostream>\nusing namespace std;\nint main() {\n    return 0;\n}", "exercise": "اكتب هيكل دالة main البسيط.", "solution": "int main() { }"},
     "2": {"title": "📥 الدرس 2: الطباعة (cout)", "explanation": "نستخدم cout متبوعة بـ << لطباعة النصوص على الشاشة، ولا ننسى الفاصلة المنقوطة ;", "example": "cout << \"Hello C++\";", "exercise": "اطبع جملة 'I Love C++'.", "solution": "cout << \"I Love C++\";"},
@@ -42,9 +42,8 @@ lessons_cpp = {
     "14": {"title": "💎 الدرس 14: الأصناف (Classes)", "explanation": "هي أساس البرمجة كائنية التوجه، حيث تجمع البيانات والوظائف في 'كائن' واحد.", "example": "class Car {\n  public:\n    void drive() { }\n};", "exercise": "عرف كلاس باسم Robot يحتوي على قسم public.", "solution": "class Robot { public: };"}
 }
 
-# --- وظائف الإرسال الآمنة (حل مشكلة Error 400) ---
+# --- وظائف الإرسال الآمنة ---
 def send_lesson(bot, chat_id, lesson_data, n, prefix):
-    # استخدام html.escape لتحويل رموز < > إلى نصوص آمنة لتلجرام
     safe_title = html.escape(lesson_data['title'])
     safe_expl = html.escape(lesson_data['explanation'])
     safe_exam = html.escape(lesson_data['example'])
@@ -52,7 +51,7 @@ def send_lesson(bot, chat_id, lesson_data, n, prefix):
     msg_text = f"<b>{safe_title}</b>\n\n{safe_expl}\n\n💻 <b>مثال توضيحي:</b>\n<code>{safe_exam}</code>"
     
     mk = types.InlineKeyboardMarkup().add(
-        types.InlineKeyboardButton("🎯 التحدي", callback_data=f"{prefix}ex_{n}")
+        types.InlineKeyboardButton("🎯 التحدي", callback_data=f"{prefix}_ex_{n}")
     )
     bot.send_message(chat_id, msg_text, parse_mode="HTML", reply_markup=mk)
 
@@ -71,18 +70,24 @@ def py_list(m):
 
 @bot_py.message_handler(func=lambda m: m.text.startswith("بايثون "))
 def py_handler(m):
-    n = m.text.split()[1]
-    if n in lessons_py:
-        send_lesson(bot_py, m.chat.id, lessons_py[n], n, "py")
+    try:
+        n = m.text.split()[1]
+        if n in lessons_py:
+            send_lesson(bot_py, m.chat.id, lessons_py[n], n, "py")
+    except: pass
 
-@bot_py.callback_query_handler(func=lambda c: c.data.startswith("py"))
+@bot_py.callback_query_handler(func=lambda c: c.data.startswith("py_"))
 def py_callback(c):
-    act, n = c.data.split("_")
+    # تفكيك الـ callback_data إلى (prefix, action, number)
+    data_parts = c.data.split("_")
+    act = data_parts[1]
+    n = data_parts[2]
     l = lessons_py[n]
-    if act == "pyex":
-        mk = types.InlineKeyboardMarkup().add(types.InlineKeyboardButton("🔑 إظهار الحل", callback_data=f"pysol_{n}"))
+    
+    if act == "ex":
+        mk = types.InlineKeyboardMarkup().add(types.InlineKeyboardButton("🔑 إظهار الحل", callback_data=f"py_sol_{n}"))
         bot_py.edit_message_text(f"🎯 <b>التحدي:</b>\n{html.escape(l['exercise'])}", c.message.chat.id, c.message.message_id, parse_mode="HTML", reply_markup=mk)
-    else:
+    elif act == "sol":
         bot_py.edit_message_text(f"✅ <b>الحل النموذجي:</b>\n<code>{html.escape(l['solution'])}</code>", c.message.chat.id, c.message.message_id, parse_mode="HTML")
 
 # --- معالجات C++ ---
@@ -100,30 +105,42 @@ def cpp_list(m):
 
 @bot_cpp.message_handler(func=lambda m: m.text.startswith("الدرس "))
 def cpp_handler(m):
-    n = m.text.split()[1]
-    if n in lessons_cpp:
-        send_lesson(bot_cpp, m.chat.id, lessons_cpp[n], n, "cp")
+    try:
+        n = m.text.split()[1]
+        if n in lessons_cpp:
+            send_lesson(bot_cpp, m.chat.id, lessons_cpp[n], n, "cp")
+    except: pass
 
-@bot_cpp.callback_query_handler(func=lambda c: c.data.startswith("cp"))
+@bot_cpp.callback_query_handler(func=lambda c: c.data.startswith("cp_"))
 def cpp_callback(c):
-    act, n = c.data.split("_")
+    data_parts = c.data.split("_")
+    act = data_parts[1]
+    n = data_parts[2]
     l = lessons_cpp[n]
-    if act == "cpex":
-        mk = types.InlineKeyboardMarkup().add(types.InlineKeyboardButton("🔑 إظهار الحل", callback_data=f"cpsol_{n}"))
+    
+    if act == "ex":
+        mk = types.InlineKeyboardMarkup().add(types.InlineKeyboardButton("🔑 إظهار الحل", callback_data=f"cp_sol_{n}"))
         bot_cpp.edit_message_text(f"🎯 <b>التحدي:</b>\n{html.escape(l['exercise'])}", c.message.chat.id, c.message.message_id, parse_mode="HTML", reply_markup=mk)
-    else:
+    elif act == "sol":
         bot_cpp.edit_message_text(f"✅ <b>الحل النموذجي:</b>\n<code>{html.escape(l['solution'])}</code>", c.message.chat.id, c.message.message_id, parse_mode="HTML")
 
 # --- نظام التشغيل ---
-def start_polling(bot, name):
+def start_polling(bot):
     while True:
         try:
             bot.remove_webhook()
-            bot.infinity_polling(skip_pending=True)
-        except: time.sleep(10)
+            bot.infinity_polling(skip_pending=True, timeout=10, long_polling_timeout=5)
+        except Exception:
+            time.sleep(10)
 
 if __name__ == "__main__":
+    # تشغيل السيرفر لـ Koyeb
     threading.Thread(target=lambda: socketserver.TCPServer(("", 8000), http.server.SimpleHTTPRequestHandler).serve_forever(), daemon=True).start()
-    threading.Thread(target=start_polling, args=(bot_py, "Python"), daemon=True).start()
-    print("🚀 All Bots are running perfectly!")
-    start_polling(bot_cpp, "C++")
+    
+    # تشغيل بوت بايثون في Thread
+    threading.Thread(target=start_polling, args=(bot_py,), daemon=True).start()
+    
+    print("🚀 Bot Empire is running! (Python & C++)")
+    
+    # تشغيل بوت C++ في الـ Main Thread
+    start_polling(bot_cpp)
