@@ -6,7 +6,7 @@ import socketserver
 import time
 import html
 from telebot import types
-from google import genai # المكتبة الجديدة لـ Gemini 2.0
+from google import genai
 
 # --- 🔑 إعدادات المفاتيح ---
 TOKEN_PY = os.getenv("TELEGRAM_TOKEN")
@@ -14,9 +14,9 @@ TOKEN_CPP = os.getenv("TELEGRAM_TOKEN2")
 TOKEN_GEMINI = os.getenv("TELEGRAM_TOKEN3")
 GEMINI_KEY = os.getenv("GEMINI_KEY")
 
-# --- 🤖 إعداد Gemini 2.0 الجديد ---
+# --- 🤖 إعداد Gemini ---
 client = genai.Client(api_key=GEMINI_KEY)
-MODEL_ID = "gemini-1.5-pro"
+MODEL_ID = "gemini-1.5-pro" # استخدام النسخة المستقرة
 SYSTEM_PROMPT = "أنت 'خبير Bot Empire'؛ مبرمج محترف وصديق للمتعلم. أسلوبك سعودي أبيض. اشرح المعلومة بعمق وبساطة، شجع المستخدم بكلمات مثل 'يا بطل' أو 'يا وحش'."
 
 # --- 📡 تعريف البوتات ---
@@ -24,7 +24,9 @@ bot_py = telebot.TeleBot(TOKEN_PY)
 bot_cpp = telebot.TeleBot(TOKEN_CPP)
 bot_gemini = telebot.TeleBot(TOKEN_GEMINI)
 
-# --- 🐍 دروس بايثون (12 درس كاملة) ---
+# [ملاحظة: دروس بايثون و C++ تبقى كما هي في كودك لضمان عدم ضياع البيانات]
+
+# --- 🐍 دروس بايثون (نفس الدروس اللي عندك) ---
 lessons_py = {
     "1": {"title": "الدرس 1: الطباعة (print) 🐍", "explanation": "دالة print هي أول خطوة لتعلم أي لغة، ووظيفتها عرض النصوص والنتائج.", "example": "print('مرحباً بك')", "exercise": "اطبع اسمك الثلاثي.", "solution": "print('عثمان ...')"},
     "2": {"title": "الدرس 2: المتغيرات 📦", "explanation": "المتغيرات هي مخازن في الذاكرة نحفظ فيها البيانات.", "example": "name = 'Osman'\nage = 20", "exercise": "عرف متغير باسم country وضع فيه اسم بلدك.", "solution": "country = 'Saudi Arabia'"},
@@ -40,7 +42,7 @@ lessons_py = {
     "12": {"title": "الدرس 12: المكتبات 📦", "explanation": "استخدام أكواد جاهزة.", "example": "import math", "exercise": "استورد مكتبة time.", "solution": "import time"}
 }
 
-# --- 🦾 دروس C++ (14 درس كاملة) ---
+# --- 🦾 دروس C++ (نفس الدروس اللي عندك) ---
 lessons_cpp = {
     "1": {"title": "الدرس 1: الهيكل 🏛️", "explanation": "أساس أي برنامج C++.", "example": "int main() { return 0; }", "exercise": "اكتب الهيكل.", "solution": "int main() { }"},
     "2": {"title": "الدرس 2: الطباعة 📥", "explanation": "استخدام cout.", "example": "cout << 'Hi';", "exercise": "اطبع 'Bot'.", "solution": "cout << 'Bot';"},
@@ -58,70 +60,81 @@ lessons_cpp = {
     "14": {"title": "الدرس 14: Classes 💎", "explanation": "أساس الـ OOP.", "example": "class C { public: };", "exercise": "عرف كلاس Robot.", "solution": "class Robot { public: };"}
 }
 
-# --- 🛠️ وظيفة إرسال الدروس ---
+# --- 🛠️ وظائف الدروس (تم تحسينها بـ try) ---
 def send_lesson(bot, chat_id, lesson_data, n, prefix):
-    safe_title = html.escape(lesson_data['title'])
-    safe_expl = html.escape(lesson_data['explanation'])
-    safe_exam = html.escape(lesson_data['example'])
-    msg_text = f"<b>{safe_title}</b>\n\n{safe_expl}\n\n💻 <b>مثال:</b>\n<code>{safe_exam}</code>"
-    mk = types.InlineKeyboardMarkup().add(types.InlineKeyboardButton("🎯 التحدي", callback_data=f"{prefix}_ex_{n}"))
-    bot.send_message(chat_id, msg_text, parse_mode="HTML", reply_markup=mk)
+    try:
+        safe_title = html.escape(lesson_data['title'])
+        safe_expl = html.escape(lesson_data['explanation'])
+        safe_exam = html.escape(lesson_data['example'])
+        msg_text = f"<b>{safe_title}</b>\n\n{safe_expl}\n\n💻 <b>مثال:</b>\n<code>{safe_exam}</code>"
+        mk = types.InlineKeyboardMarkup().add(types.InlineKeyboardButton("🎯 التحدي", callback_data=f"{prefix}_ex_{n}"))
+        bot.send_message(chat_id, msg_text, parse_mode="HTML", reply_markup=mk)
+    except Exception as e:
+        print(f"Error sending lesson: {e}")
 
 # --- 🐍 معالجات بايثون ---
 @bot_py.message_handler(commands=['start'])
 def py_start(m):
     mk = types.ReplyKeyboardMarkup(resize_keyboard=True).add("🐍 دروس بايثون")
-    bot_py.send_message(m.chat.id, f"أهلاً بك في Bot Empire بايثون 🐍", reply_markup=mk)
+    bot_py.send_message(m.chat.id, f"أهلاً بك في Bot Empire بايثون 🐍 يا وحش!", reply_markup=mk)
 
 @bot_py.message_handler(func=lambda m: m.text == "🐍 دروس بايثون")
 def py_list(m):
     mk = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=3)
     btns = [types.KeyboardButton(f"بايثون {i}") for i in range(1, 13)]
     mk.add(*btns)
-    bot_py.send_message(m.chat.id, "اختر الدرس:", reply_markup=mk)
+    bot_py.send_message(m.chat.id, "اختر الدرس يا بطل:", reply_markup=mk)
 
-@bot_py.message_handler(func=lambda m: m.text.startswith("بايثون "))
+@bot_py.message_handler(func=lambda m: m.text and m.text.startswith("بايثون "))
 def py_handler(m):
-    n = m.text.split()[1]
-    if n in lessons_py: send_lesson(bot_py, m.chat.id, lessons_py[n], n, "py")
+    try:
+        n = m.text.split()[1]
+        if n in lessons_py: send_lesson(bot_py, m.chat.id, lessons_py[n], n, "py")
+    except: pass
 
 @bot_py.callback_query_handler(func=lambda c: c.data.startswith("py_"))
 def py_callback(c):
-    act, n = c.data.split("_")[1], c.data.split("_")[2]
-    if act == "ex":
-        mk = types.InlineKeyboardMarkup().add(types.InlineKeyboardButton("🔑 الحل", callback_data=f"py_sol_{n}"))
-        bot_py.edit_message_text(f"🎯 التحدي: {lessons_py[n]['exercise']}", c.message.chat.id, c.message.message_id, reply_markup=mk)
-    elif act == "sol":
-        bot_py.edit_message_text(f"✅ الحل: <code>{lessons_py[n]['solution']}</code>", c.message.chat.id, c.message.message_id, parse_mode="HTML")
+    try:
+        act, n = c.data.split("_")[1], c.data.split("_")[2]
+        if act == "ex":
+            mk = types.InlineKeyboardMarkup().add(types.InlineKeyboardButton("🔑 الحل", callback_data=f"py_sol_{n}"))
+            bot_py.edit_message_text(f"🎯 التحدي: {lessons_py[n]['exercise']}", c.message.chat.id, c.message.message_id, reply_markup=mk)
+        elif act == "sol":
+            bot_py.edit_message_text(f"✅ الحل: <code>{lessons_py[n]['solution']}</code>", c.message.chat.id, c.message.message_id, parse_mode="HTML")
+    except: pass
 
 # --- 🦾 معالجات C++ ---
 @bot_cpp.message_handler(commands=['start'])
 def cpp_start(m):
     mk = types.ReplyKeyboardMarkup(resize_keyboard=True).add("🦾 دروس C++")
-    bot_cpp.send_message(m.chat.id, f"أهلاً بك في Bot Empire C++ 🦾", reply_markup=mk)
+    bot_cpp.send_message(m.chat.id, f"أهلاً بك في Bot Empire C++ 🦾 يا بطل!", reply_markup=mk)
 
 @bot_cpp.message_handler(func=lambda m: m.text == "🦾 دروس C++")
 def cpp_list(m):
     mk = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=3)
     btns = [types.KeyboardButton(f"الدرس {i}") for i in range(1, 15)]
     mk.add(*btns)
-    bot_cpp.send_message(m.chat.id, "اختر الدرس:", reply_markup=mk)
+    bot_cpp.send_message(m.chat.id, "اختر الدرس يا وحش:", reply_markup=mk)
 
-@bot_cpp.message_handler(func=lambda m: m.text.startswith("الدرس "))
+@bot_cpp.message_handler(func=lambda m: m.text and m.text.startswith("الدرس "))
 def cpp_handler(m):
-    n = m.text.split()[1]
-    if n in lessons_cpp: send_lesson(bot_cpp, m.chat.id, lessons_cpp[n], n, "cp")
+    try:
+        n = m.text.split()[1]
+        if n in lessons_cpp: send_lesson(bot_cpp, m.chat.id, lessons_cpp[n], n, "cp")
+    except: pass
 
 @bot_cpp.callback_query_handler(func=lambda c: c.data.startswith("cp_"))
 def cpp_callback(c):
-    act, n = c.data.split("_")[1], c.data.split("_")[2]
-    if act == "ex":
-        mk = types.InlineKeyboardMarkup().add(types.InlineKeyboardButton("🔑 الحل", callback_data=f"cp_sol_{n}"))
-        bot_cpp.edit_message_text(f"🎯 التحدي: {lessons_cpp[n]['exercise']}", c.message.chat.id, c.message.message_id, reply_markup=mk)
-    elif act == "sol":
-        bot_cpp.edit_message_text(f"✅ الحل: <code>{lessons_cpp[n]['solution']}</code>", c.message.chat.id, c.message.message_id, parse_mode="HTML")
+    try:
+        act, n = c.data.split("_")[1], c.data.split("_")[2]
+        if act == "ex":
+            mk = types.InlineKeyboardMarkup().add(types.InlineKeyboardButton("🔑 الحل", callback_data=f"cp_sol_{n}"))
+            bot_cpp.edit_message_text(f"🎯 التحدي: {lessons_cpp[n]['exercise']}", c.message.chat.id, c.message.message_id, reply_markup=mk)
+        elif act == "sol":
+            bot_cpp.edit_message_text(f"✅ الحل: <code>{lessons_cpp[n]['solution']}</code>", c.message.chat.id, c.message.message_id, parse_mode="HTML")
+    except: pass
 
-# --- 🤖 معالج Gemini (المكتبة الجديدة) ---
+# --- 🤖 معالج Gemini (المطور) ---
 @bot_gemini.message_handler(func=lambda m: True)
 def gemini_handler(m):
     try:
@@ -129,23 +142,37 @@ def gemini_handler(m):
             model=MODEL_ID,
             contents=f"{SYSTEM_PROMPT}\nسؤال المستخدم: {m.text}"
         )
-        bot_gemini.reply_to(m, response.text)
+        if response and response.text:
+            bot_gemini.reply_to(m, response.text)
+        else:
+            bot_gemini.reply_to(m, "يا وحش قوقل استلمت الرسالة بس ما عطتني رد، جرب تغير صيغة السؤال.")
     except Exception as e:
-        print(f"❌ Error: {e}")
-        bot_gemini.reply_to(m, "يا وحش حصل تعليق، جرب لاحقاً أو كلم المطور.")
+        err_str = str(e)
+        print(f"❌ Gemini Error: {err_str}")
+        if "429" in err_str:
+            bot_gemini.reply_to(m, "قوقل تقول اركد شوي (ضغط عالي)، جرب بعد دقيقة.")
+        else:
+            bot_gemini.reply_to(m, "يا وحش حصل تعليق تقني، جرب مرة ثانية.")
 
-# --- 🚀 تشغيل النظام ---
+# --- 🚀 تشغيل النظام (نسخة CAN المستقرة) ---
 def run_bot(bot, name):
     print(f"📡 {name} is starting...")
     while True:
         try:
-            bot.infinity_polling(timeout=20)
-        except:
+            # استخدام polling العادي داخل loop لضمان إعادة التشغيل عند الخطأ
+            bot.polling(none_stop=True, interval=1, timeout=30)
+        except Exception as e:
+            print(f"⚠️ {name} disconnected: {e}. Reconnecting in 5s...")
             time.sleep(5)
 
 if __name__ == "__main__":
+    # تشغيل سيرفر الويب (Health Check)
     PORT = int(os.getenv("PORT", 8000))
-    threading.Thread(target=lambda: socketserver.TCPServer(("", PORT), http.server.SimpleHTTPRequestHandler).serve_forever(), daemon=True).start()
+    def start_server():
+        with socketserver.TCPServer(("", PORT), http.server.SimpleHTTPRequestHandler) as httpd:
+            httpd.serve_forever()
+    
+    threading.Thread(target=start_server, daemon=True).start()
     
     threads = [
         threading.Thread(target=run_bot, args=(bot_py, "Python Bot")),
@@ -153,6 +180,5 @@ if __name__ == "__main__":
         threading.Thread(target=run_bot, args=(bot_gemini, "Gemini Bot"))
     ]
     for t in threads: t.start()
-    print("🚀 Bot Empire is fully active!")
+    print("🚀 Bot Empire is fully active and protected by CAN!")
     for t in threads: t.join()
-
