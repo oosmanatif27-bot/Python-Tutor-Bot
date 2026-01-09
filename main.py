@@ -5,8 +5,9 @@ import http.server
 import socketserver
 import time
 import html
-from telebot import types
 import google.generativeai as genai
+from telebot import types
+from google import genai
 
 # --- 🔑 إعدادات المفاتيح (Environment Variables) ---
 TOKEN_PY = os.getenv("TELEGRAM_TOKEN")
@@ -132,19 +133,24 @@ def cpp_callback(c):
     elif act == "sol":
         bot_cpp.edit_message_text(f"✅ <b>الحل النموذجي:</b>\n<code>{html.escape(l['solution'])}</code>", c.message.chat.id, c.message.message_id, parse_mode="HTML")
 
-# --- 🤖 معالجات بوت Gemini الذكي ---
-@bot_gemini.message_handler(commands=['start'])
-def gemini_start(m):
-    bot_gemini.send_message(m.chat.id, f"يا هلا بك {m.from_user.first_name} في Bot Empire! 🤖\nأنا خبيرك الذكي، اسألني أي شيء في البرمجة أو الأمن السيبراني وأبشر بسعدك!")
+# --- 🤖 إعداد Gemini 2.0 الجديد ---
+client = genai.Client(api_key=GEMINI_KEY)
+MODEL_ID = "gemini-2.0-flash-exp" # الموديل اللي طلبته
 
+# --- معالج بوت Gemini ---
 @bot_gemini.message_handler(func=lambda m: True)
 def gemini_handler(m):
     try:
-        response = chat_session.send_message(f"{SYSTEM_PROMPT}\nسؤال: {m.text}")
+        # الطريقة الجديدة للإرسال في المكتبة المحدثة
+        response = client.models.generate_content(
+            model=MODEL_ID,
+            contents=f"{SYSTEM_PROMPT}\nسؤال: {m.text}"
+        )
         bot_gemini.reply_to(m, response.text)
     except Exception as e:
-        bot_gemini.reply_to(m, "حصل تعليق بسيط، جرب مرة ثانية يا وحش.")
-
+        print(f"❌ خطأ الـ AI الجديد: {e}")
+        bot_gemini.reply_to(m, "يا وحش حصل تعليق في الاتصال مع قوقل، تأكد من المفتاح!")
+        
 # --- 🚀 نظام التشغيل السحابي ---
 def run_bot(bot, name):
     print(f"📡 {name} is starting...")
@@ -174,4 +180,5 @@ if __name__ == "__main__":
     for t in threads: t.start()
     print("🚀 Bot Empire is fully active with 3 Intelligent Bots!")
     for t in threads: t.join()
+
 
