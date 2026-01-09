@@ -6,138 +6,123 @@ import socketserver
 import time
 import html
 from telebot import types
-from google import genai # المكتبة الجديدة فقط
+from google import genai # المكتبة الجديدة لـ Gemini 2.0
 
-
-# --- 🔑 إعدادات المفاتيح (Environment Variables) ---
+# --- 🔑 إعدادات المفاتيح ---
 TOKEN_PY = os.getenv("TELEGRAM_TOKEN")
 TOKEN_CPP = os.getenv("TELEGRAM_TOKEN2")
 TOKEN_GEMINI = os.getenv("TELEGRAM_TOKEN3")
 GEMINI_KEY = os.getenv("GEMINI_KEY")
 
-# --- 🤖 إعداد الذكاء الاصطناعي (Gemini) ---
-genai.configure(api_key=GEMINI_KEY)
-model = genai.GenerativeModel('gemini-2.0-flash-exp')
-chat_session = model.start_chat(history=[])
+# --- 🤖 إعداد Gemini 2.0 الجديد ---
+client = genai.Client(api_key=GEMINI_KEY)
+MODEL_ID = "gemini-2.0-flash-exp" 
 
-SYSTEM_PROMPT = "أنت 'خبير Bot Empire'؛ مبرمج محترف وصديق للمتعلم. أسلوبك سعودي أبيض، وسط بين الجدية والمرح. اشرح المعلومة بعمق وبساطة، شجع المستخدم بكلمات مثل 'يا بطل' أو 'يا وحش' إذا أصاب، ووجهه بهدوء إذا أخطأ."
+SYSTEM_PROMPT = "أنت 'خبير Bot Empire'؛ مبرمج محترف وصديق للمتعلم. أسلوبك سعودي أبيض. اشرح المعلومة بعمق وبساطة، شجع المستخدم بكلمات مثل 'يا بطل' أو 'يا وحش'."
 
-# --- 📡 تعريف البوتات الثلاثة ---
+# --- 📡 تعريف البوتات ---
 bot_py = telebot.TeleBot(TOKEN_PY)
 bot_cpp = telebot.TeleBot(TOKEN_CPP)
 bot_gemini = telebot.TeleBot(TOKEN_GEMINI)
 
-# --- 🐍 دروس بايثون (12 درس) ---
+# --- 🐍 دروس بايثون (12 درس كاملة) ---
 lessons_py = {
-    "1": {"title": "الدرس 1: الطباعة (print) 🐍", "explanation": "تعتبر دالة print هي أول خطوة لتعلم أي لغة، ووظيفتها عرض النصوص والنتائج للمستخدم على الشاشة.", "example": "print('مرحباً بك في عالم بايثون')", "exercise": "اطبع اسمك الثلاثي باستخدام دالة print.", "solution": "print('عثمان ... ...')"},
-    "2": {"title": "الدرس 2: المتغيرات (Variables) 📦", "explanation": "المتغيرات هي مخازن في الذاكرة نحفظ فيها البيانات (أرقام أو نصوص) لنستخدمها لاحقاً في الكود.", "example": "name = 'Osman'\nage = 20", "exercise": "عرف متغير باسم country وضع فيه اسم بلدك.", "solution": "country = 'Saudi Arabia'"},
-    "3": {"title": "الدرس 3: العمليات الحسابية ➗", "explanation": "بايثون بارعة في الحساب! يمكنك الجمع (+)، الطرح (-)، الضرب (*)، والقسمة (/).", "example": "x = 10 + 5 * 2", "exercise": "احسب حاصل ضرب 5 في 5 واطبعه.", "solution": "print(5 * 5)"},
-    "4": {"title": "الدرس 4: الإدخال (input) 📥", "explanation": "دالة input تسمح للبرنامج بالتفاعل مع المستخدم وأخذ معلومات منه أثناء تشغيل الكود.", "example": "user_name = input('ما هو اسمك؟ ')", "exercise": "اطلب من المستخدم إدخال عمره وخزنه في متغير.", "solution": "age = input('كم عمرك؟ ')"},
-    "5": {"title": "الدرس 5: القوائم (Lists) 📚", "explanation": "القائمة هي متغير واحد يمكنه تخزين الكثير من القيم بترتيب معين، ونستخدم الأقواس المربعة [].", "example": "fruits = ['تفاح', 'موز', 'برتقال']", "exercise": "أنشئ قائمة تحتوي على ثلاثة أرقام من اختيارك.", "solution": "nums = [10, 20, 30]"},
-    "6": {"title": "الدرس 6: القواميس (Dictionaries) 📖", "explanation": "القاموس يخزن البيانات بنظام (مفتاح وقيمة)، مثل دليل الهاتف (الاسم: الرقم).", "example": "car = {'brand': 'Toyota', 'year': 2024}", "exercise": "أنشئ قاموساً يحتوي على مفتاح 'city' وقيمة 'Riyadh'.", "solution": "d = {'city': 'Riyadh'}"},
-    "7": {"title": "الدرس 7: الشروط (if statement) ⚖️", "explanation": "تستخدم لاتخاذ القرارات؛ إذا تحقق الشرط ينفذ الكود، وإذا لم يتحقق ينتقل لغيره.", "example": "if score >= 50:\n    print('ناجح')", "exercise": "اكتب شرطاً يطبع 'موجب' إذا كان الرقم x أكبر من 0.", "solution": "if x > 0:\n    print('موجب')"},
-    "8": {"title": "الدرس 8: التكرار (for loop) 🔄", "explanation": "تستخدم لتكرار تنفيذ كود معين لعدد محدد من المرات أو للمرور على عناصر قائمة.", "example": "for i in range(5):\n    print('أنا أتعلم بايثون')", "exercise": "اطبع الأرقام من 0 إلى 2 باستخدام for.", "solution": "for i in range(3):\n    print(i)"},
-    "9": {"title": "الدرس 9: الدوال (Functions) ⚙️", "explanation": "الدالة هي كتلة من الكود يتم تعريفها مرة واحدة واستدعاؤها كلما احتجنا إليها لتنظيم العمل.", "example": "def say_hi():\n    print('مرحباً')", "exercise": "عرف دالة باسم welcome تطبع رسالة ترحيبية.", "solution": "def welcome():\n    print('Welcome!')"},
-    "10": {"title": "الدرس 10: معالجة الأخطاء (try/except) 🛡️", "explanation": "تستخدم لحماية البرنامج من التوقف المفاجئ في حال حدوث خطأ غير متوقع.", "example": "try:\n    print(10/0)\nexcept:\n    print('خطأ في القسمة')", "exercise": "استخدم try لتجنب انهيار الكود عند تقسيم رقم على صفر.", "solution": "try: 1/0\nexcept: pass"},
-    "11": {"title": "الدرس 11: الملفات (Files) 📂", "explanation": "تمكنك بايثون من إنشاء ملفات نصية، القراءة منها، والكتابة عليها برمجياً.", "example": "with open('note.txt', 'w') as f:\n    f.write('Hello')", "exercise": "افتح ملفاً باسم 'test.txt' في وضع القراءة 'r'.", "solution": "open('test.txt', 'r')"},
-    "12": {"title": "الدرس 12: المكتبات (Modules) 📦", "explanation": "يمكنك استيراد أكواد جاهزة كتبها مبرمجون آخرون لتوفير الوقت، مثل مكتبة math أو time.", "example": "import math\nprint(math.pi)", "exercise": "استورد مكتبة random.", "solution": "import random"}
+    "1": {"title": "الدرس 1: الطباعة (print) 🐍", "explanation": "دالة print هي أول خطوة لتعلم أي لغة، ووظيفتها عرض النصوص والنتائج.", "example": "print('مرحباً بك')", "exercise": "اطبع اسمك الثلاثي.", "solution": "print('عثمان ...')"},
+    "2": {"title": "الدرس 2: المتغيرات 📦", "explanation": "المتغيرات هي مخازن في الذاكرة نحفظ فيها البيانات.", "example": "name = 'Osman'\nage = 20", "exercise": "عرف متغير باسم country وضع فيه اسم بلدك.", "solution": "country = 'Saudi Arabia'"},
+    "3": {"title": "الدرس 3: الحساب ➗", "explanation": "بايثون بارعة في الحساب (+, -, *, /).", "example": "x = 10 + 5", "exercise": "احسب حاصل ضرب 5 في 5.", "solution": "print(5 * 5)"},
+    "4": {"title": "الدرس 4: الإدخال (input) 📥", "explanation": "دالة input تأخذ معلومات من المستخدم.", "example": "name = input('ما اسمك؟')", "exercise": "اطلب عمر المستخدم.", "solution": "age = input('كم عمرك؟')"},
+    "5": {"title": "الدرس 5: القوائم (Lists) 📚", "explanation": "تخزين قيم كثيرة في متغير واحد [].", "example": "items = [1, 2, 3]", "exercise": "أنشئ قائمة فيها 3 ألوان.", "solution": "colors = ['Red', 'Blue', 'Green']"},
+    "6": {"title": "الدرس 6: القواميس 📖", "explanation": "تخزين البيانات بنظام مفتاح وقيمة {}.", "example": "d = {'id': 1}", "exercise": "أنشئ قاموس فيه 'city': 'Riyadh'.", "solution": "d = {'city': 'Riyadh'}"},
+    "7": {"title": "الدرس 7: الشروط (if) ⚖️", "explanation": "لاتخاذ القرارات في الكود.", "example": "if x > 0: print('ok')", "exercise": "اطبع 'ناجح' إذا كانت الدرجة s أكبر من 50.", "solution": "if s > 50: print('ناجح')"},
+    "8": {"title": "الدرس 8: التكرار (for) 🔄", "explanation": "لتكرار الكود عدة مرات.", "example": "for i in range(3): print(i)", "exercise": "اطبع كلمة 'Hello' 5 مرات.", "solution": "for i in range(5): print('Hello')"},
+    "9": {"title": "الدرس 9: الدوال (Functions) ⚙️", "explanation": "كتلة كود نستخدمها متى ما بغينا.", "example": "def hi(): print('hi')", "exercise": "عرف دالة باسم go تطبع 'Go'.", "solution": "def go(): print('Go')"},
+    "10": {"title": "الدرس 10: الأخطاء (try) 🛡️", "explanation": "لحماية البرنامج من الانهيار.", "example": "try: 1/0 \nexcept: print('error')", "exercise": "استخدم try لتجنب خطأ القسمة.", "solution": "try: x=1/0 \nexcept: pass"},
+    "11": {"title": "الدرس 11: الملفات 📂", "explanation": "القراءة والكتابة على الملفات.", "example": "open('f.txt', 'w')", "exercise": "افتح ملف test.txt للقراءة.", "solution": "open('test.txt', 'r')"},
+    "12": {"title": "الدرس 12: المكتبات 📦", "explanation": "استخدام أكواد جاهزة.", "example": "import math", "exercise": "استورد مكتبة time.", "solution": "import time"}
 }
 
-# --- 🦾 دروس C++ (14 درس) ---
+# --- 🦾 دروس C++ (14 درس كاملة) ---
 lessons_cpp = {
-    "1": {"title": "🏛️ الدرس 1: الهيكل الأساسي", "explanation": "كل برنامج C++ يجب أن يبدأ بتضمين المكتبات ودالة main التي يبدأ من عندها التنفيذ.", "example": "#include <iostream>\nusing namespace std;\nint main() {\n    return 0;\n}", "exercise": "اكتب هيكل دالة main البسيط.", "solution": "int main() { }"},
-    "2": {"title": "📥 الدرس 2: الطباعة (cout)", "explanation": "نستخدم cout متبوعة بـ << لطباعة النصوص على الشاشة، ولا ننسى الفاصلة المنقوطة ;", "example": "cout << \"Hello C++\";", "exercise": "اطبع جملة 'I Love C++'.", "solution": "cout << \"I Love C++\";"},
-    "3": {"title": "📦 الدرس 3: أنواع البيانات", "explanation": "يجب تحديد نوع المتغير في C++: int للأرقام، double للكسور، و string النصوص.", "example": "int age = 25;\nstring name = \"Osman\";", "exercise": "عرف متغيراً من نوع double باسم price.", "solution": "double price = 10.5;"},
-    "4": {"title": "➗ الدرس 4: العمليات الحسابية", "explanation": "تستخدم نفس الرموز الرياضية المعروفة، ولكن يجب الحذر عند قسمة الأرقام الصحيحة.", "example": "int result = (10 + 2) * 3;", "exercise": "احسب 100 تقسيم 4 وخزنها في متغير.", "solution": "int x = 100 / 4;"},
-    "5": {"title": "⚖️ الدرس 5: الجمل الشرطية", "explanation": "تستخدم if و else لتحديد مسار البرنامج بناءً على قيم المتغيرات.", "example": "if(x > 10) {\n    cout << \"Big\";\n}", "exercise": "اكتب شرطاً يتأكد إذا كان x يساوي 5.", "solution": "if(x == 5) { }"},
-    "6": {"title": "🔄 الدرس 6: الحلقات (Loops)", "explanation": "حلقة for تستخدم للتكرار بدقة، وتتكون من البداية، الشرط، ومقدار الزيادة.", "example": "for(int i=0; i<5; i++) {\n    cout << i;\n}", "exercise": "كرر عملية الطباعة 10 مرات باستخدام for.", "solution": "for(int i=0; i<10; i++) { }"},
-    "7": {"title": "📊 الدرس 7: المصفوفات (Arrays)", "explanation": "تسمح بتخزين مجموعة من العناصر من نفس النوع في متغير واحد بحجم ثابت.", "example": "int grades[5] = {90, 85, 80, 70, 60};", "exercise": "عرف مصفوفة أرقام صحيحة حجمها 10.", "solution": "int arr[10];"},
-    "8": {"title": "🔤 الدرس 8: النصوص (Strings)", "explanation": "للتعامل مع النصوص بشكل متقدم نستخدم مكتبة <string> التي توفر مميزات كثيرة.", "example": "#include <string>\nstring text = \"C++ Power\";", "exercise": "عرف متغير نصي باسم message.", "solution": "string message;"},
-    "9": {"title": "⚙️ الدرس 9: الدوال (Functions)", "explanation": "الدوال تساعدك في تنظيم كودك؛ نعرف النوع (مثل void) ثم الاسم ثم الأقواس.", "example": "void greet() {\n    cout << \"Hi\";\n}", "exercise": "عرف دالة باسم run لا تعيد أي قيمة.", "solution": "void run() { }"},
-    "10": {"title": "🎯 الدرس 10: المؤشرات (Pointers)", "explanation": "المؤشر هو متغير 'ذكي' لا يحفظ رقماً عادياً، بل يحفظ عنوان متغير آخر في الذاكرة.", "example": "int x = 10;\nint* ptr = &x;", "exercise": "عرف مؤشر ptr يشير إلى نوع int.", "solution": "int* ptr;"},
-    "11": {"title": "🔗 الدرس 11: المراجع (References)", "explanation": "المرجع هو اسم مستعار لمتغير موجود بالفعل، أي تغيير في المرجع يغير الأصل.", "example": "int x = 5;\nint &ref = x;", "exercise": "عرف مرجعاً باسم r للمتغير count.", "solution": "int &r = count;"},
-    "12": {"title": "🧠 الدرس 12: الذاكرة الديناميكية", "explanation": "نستخدم الكلمة المحجوزة new لحجز مساحة في الذاكرة أثناء تشغيل البرنامج.", "example": "int* p = new int;\n*p = 100;", "exercise": "احجز مساحة لنوع double باستخدام new.", "solution": "new double;"},
-    "13": {"title": "🏗️ الدرس 13: الهياكل (Structs)", "explanation": "الـ Struct يسمح لك بإنشاء نوع بيانات خاص بك يجمع أنواعاً مختلفة بداخله.", "example": "struct Player {\n    int id;\n    string name;\n};", "exercise": "عرف struct بسيط باسم Book.", "solution": "struct Book { };"},
-    "14": {"title": "💎 الدرس 14: الأصناف (Classes)", "explanation": "هي أساس البرمجة كائنية التوجه، حيث تجمع البيانات والوظائف في 'كائن' واحد.", "example": "class Car {\n  public:\n    void drive() { }\n};", "exercise": "عرف كلاس باسم Robot يحتوي على قسم public.", "solution": "class Robot { public: };"}
+    "1": {"title": "الدرس 1: الهيكل 🏛️", "explanation": "أساس أي برنامج C++.", "example": "int main() { return 0; }", "exercise": "اكتب الهيكل.", "solution": "int main() { }"},
+    "2": {"title": "الدرس 2: الطباعة 📥", "explanation": "استخدام cout.", "example": "cout << 'Hi';", "exercise": "اطبع 'Bot'.", "solution": "cout << 'Bot';"},
+    "3": {"title": "الدرس 3: الأنواع 📦", "explanation": "int, double, string.", "example": "int x = 5;", "exercise": "عرف x كـ double.", "solution": "double x;"},
+    "4": {"title": "الدرس 4: الحساب ➗", "explanation": "العمليات الرياضية.", "example": "x = 10 / 2;", "exercise": "اضرب 2 في 4.", "solution": "int x = 2 * 4;"},
+    "5": {"title": "الدرس 5: الشروط ⚖️", "explanation": "استخدام if و else.", "example": "if(x==1){}", "exercise": "تأكد لو x أكبر من 10.", "solution": "if(x > 10){ }"},
+    "6": {"title": "الدرس 6: التكرار 🔄", "explanation": "حلقة for.", "example": "for(int i=0;i<5;i++){}", "exercise": "كرر 10 مرات.", "solution": "for(int i=0;i<10;i++){ }"},
+    "7": {"title": "الدرس 7: المصفوفات 📊", "explanation": "تخزين مصفوفة أرقام.", "example": "int a[5];", "exercise": "عرف مصفوفة حجمها 3.", "solution": "int a[3];"},
+    "8": {"title": "الدرس 8: النصوص 🔤", "explanation": "استخدام string.", "example": "string s = 'hi';", "exercise": "عرف نص باسم msg.", "solution": "string msg;"},
+    "9": {"title": "الدرس 9: الدوال ⚙️", "explanation": "تنظيم الكود.", "example": "void f(){}", "exercise": "عرف دالة باسم run.", "solution": "void run(){ }"},
+    "10": {"title": "الدرس 10: المؤشرات 🎯", "explanation": "عناوين الذاكرة.", "example": "int* p = &x;", "exercise": "عرف مؤشر ptr.", "solution": "int* ptr;"},
+    "11": {"title": "الدرس 11: المراجع 🔗", "explanation": "اسم مستعار للمتغير.", "example": "int &r = x;", "exercise": "عرف مرجع r للمتغير n.", "solution": "int &r = n;"},
+    "12": {"title": "الدرس 12: الذاكرة 🧠", "explanation": "استخدام new.", "example": "int* p = new int;", "exercise": "احجز ذاكرة لـ double.", "solution": "new double;"},
+    "13": {"title": "الدرس 13: Struct 🏗️", "explanation": "بيانات مخصصة.", "example": "struct S {};", "exercise": "عرف struct باسم Car.", "solution": "struct Car {};"},
+    "14": {"title": "الدرس 14: Classes 💎", "explanation": "أساس الـ OOP.", "example": "class C { public: };", "exercise": "عرف كلاس Robot.", "solution": "class Robot { public: };"}
 }
 
-# --- 🛠️ وظيفة إرسال الدروس المشتركة ---
+# --- 🛠️ وظيفة إرسال الدروس ---
 def send_lesson(bot, chat_id, lesson_data, n, prefix):
     safe_title = html.escape(lesson_data['title'])
     safe_expl = html.escape(lesson_data['explanation'])
     safe_exam = html.escape(lesson_data['example'])
-    msg_text = f"<b>{safe_title}</b>\n\n{safe_expl}\n\n💻 <b>مثال توضيحي:</b>\n<code>{safe_exam}</code>"
-    mk = types.InlineKeyboardMarkup()
-    mk.add(types.InlineKeyboardButton("🎯 التحدي", callback_data=f"{prefix}_ex_{n}"))
+    msg_text = f"<b>{safe_title}</b>\n\n{safe_expl}\n\n💻 <b>مثال:</b>\n<code>{safe_exam}</code>"
+    mk = types.InlineKeyboardMarkup().add(types.InlineKeyboardButton("🎯 التحدي", callback_data=f"{prefix}_ex_{n}"))
     bot.send_message(chat_id, msg_text, parse_mode="HTML", reply_markup=mk)
 
-# --- 🐍 معالجات بوت بايثون ---
+# --- 🐍 معالجات بايثون ---
 @bot_py.message_handler(commands=['start'])
 def py_start(m):
     mk = types.ReplyKeyboardMarkup(resize_keyboard=True).add("🐍 دروس بايثون")
-    bot_py.send_message(m.chat.id, f"مرحباً بك في Bot Empire يا {m.from_user.first_name}!\nقسم: تعليم بايثون 🐍", reply_markup=mk)
+    bot_py.send_message(m.chat.id, f"أهلاً بك في Bot Empire بايثون 🐍", reply_markup=mk)
 
 @bot_py.message_handler(func=lambda m: m.text == "🐍 دروس بايثون")
 def py_list(m):
     mk = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=3)
     btns = [types.KeyboardButton(f"بايثون {i}") for i in range(1, 13)]
     mk.add(*btns)
-    bot_py.send_message(m.chat.id, "اختر الدرس الذي ترغب في تعلمه:", reply_markup=mk)
+    bot_py.send_message(m.chat.id, "اختر الدرس:", reply_markup=mk)
 
 @bot_py.message_handler(func=lambda m: m.text.startswith("بايثون "))
 def py_handler(m):
-    try:
-        n = m.text.split()[1]
-        if n in lessons_py: send_lesson(bot_py, m.chat.id, lessons_py[n], n, "py")
-    except: pass
+    n = m.text.split()[1]
+    if n in lessons_py: send_lesson(bot_py, m.chat.id, lessons_py[n], n, "py")
 
 @bot_py.callback_query_handler(func=lambda c: c.data.startswith("py_"))
 def py_callback(c):
-    data_parts = c.data.split("_")
-    act, n = data_parts[1], data_parts[2]
-    l = lessons_py[n]
+    act, n = c.data.split("_")[1], c.data.split("_")[2]
     if act == "ex":
-        mk = types.InlineKeyboardMarkup().add(types.InlineKeyboardButton("🔑 إظهار الحل", callback_data=f"py_sol_{n}"))
-        bot_py.edit_message_text(f"🎯 <b>التحدي:</b>\n{html.escape(l['exercise'])}", c.message.chat.id, c.message.message_id, parse_mode="HTML", reply_markup=mk)
+        mk = types.InlineKeyboardMarkup().add(types.InlineKeyboardButton("🔑 الحل", callback_data=f"py_sol_{n}"))
+        bot_py.edit_message_text(f"🎯 التحدي: {lessons_py[n]['exercise']}", c.message.chat.id, c.message.message_id, reply_markup=mk)
     elif act == "sol":
-        bot_py.edit_message_text(f"✅ <b>الحل النموذجي:</b>\n<code>{html.escape(l['solution'])}</code>", c.message.chat.id, c.message.message_id, parse_mode="HTML")
+        bot_py.edit_message_text(f"✅ الحل: <code>{lessons_py[n]['solution']}</code>", c.message.chat.id, c.message.message_id, parse_mode="HTML")
 
-# --- 🦾 معالجات بوت C++ ---
+# --- 🦾 معالجات C++ ---
 @bot_cpp.message_handler(commands=['start'])
 def cpp_start(m):
     mk = types.ReplyKeyboardMarkup(resize_keyboard=True).add("🦾 دروس C++")
-    bot_cpp.send_message(m.chat.id, f"مرحباً بك في Bot Empire يا {m.from_user.first_name}!\nقسم: تعليم C++ الاحترافي 🦾", reply_markup=mk)
+    bot_cpp.send_message(m.chat.id, f"أهلاً بك في Bot Empire C++ 🦾", reply_markup=mk)
 
 @bot_cpp.message_handler(func=lambda m: m.text == "🦾 دروس C++")
 def cpp_list(m):
     mk = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=3)
     btns = [types.KeyboardButton(f"الدرس {i}") for i in range(1, 15)]
     mk.add(*btns)
-    bot_cpp.send_message(m.chat.id, "اختر درس الـ C++:", reply_markup=mk)
+    bot_cpp.send_message(m.chat.id, "اختر الدرس:", reply_markup=mk)
 
 @bot_cpp.message_handler(func=lambda m: m.text.startswith("الدرس "))
 def cpp_handler(m):
-    try:
-        n = m.text.split()[1]
-        if n in lessons_cpp: send_lesson(bot_cpp, m.chat.id, lessons_cpp[n], n, "cp")
-    except: pass
+    n = m.text.split()[1]
+    if n in lessons_cpp: send_lesson(bot_cpp, m.chat.id, lessons_cpp[n], n, "cp")
 
 @bot_cpp.callback_query_handler(func=lambda c: c.data.startswith("cp_"))
 def cpp_callback(c):
-    data_parts = c.data.split("_")
-    act, n = data_parts[1], data_parts[2]
-    l = lessons_cpp[n]
+    act, n = c.data.split("_")[1], c.data.split("_")[2]
     if act == "ex":
-        mk = types.InlineKeyboardMarkup().add(types.InlineKeyboardButton("🔑 إظهار الحل", callback_data=f"cp_sol_{n}"))
-        bot_cpp.edit_message_text(f"🎯 <b>التحدي:</b>\n{html.escape(l['exercise'])}", c.message.chat.id, c.message.message_id, parse_mode="HTML", reply_markup=mk)
+        mk = types.InlineKeyboardMarkup().add(types.InlineKeyboardButton("🔑 الحل", callback_data=f"cp_sol_{n}"))
+        bot_cpp.edit_message_text(f"🎯 التحدي: {lessons_cpp[n]['exercise']}", c.message.chat.id, c.message.message_id, reply_markup=mk)
     elif act == "sol":
-        bot_cpp.edit_message_text(f"✅ <b>الحل النموذجي:</b>\n<code>{html.escape(l['solution'])}</code>", c.message.chat.id, c.message.message_id, parse_mode="HTML")
+        bot_cpp.edit_message_text(f"✅ الحل: <code>{lessons_cpp[n]['solution']}</code>", c.message.chat.id, c.message.message_id, parse_mode="HTML")
 
-# --- 🤖 إعداد Gemini 2.0 الجديد ---
-client = genai.Client(api_key=GEMINI_KEY)
-MODEL_ID = "gemini-2.0-flash-exp" # الموديل اللي طلبته
-
-# --- 🤖 معالج بوت Gemini (بالطريقة الجديدة) ---
+# --- 🤖 معالج Gemini (المكتبة الجديدة) ---
 @bot_gemini.message_handler(func=lambda m: True)
 def gemini_handler(m):
     try:
@@ -148,37 +133,26 @@ def gemini_handler(m):
         bot_gemini.reply_to(m, response.text)
     except Exception as e:
         print(f"❌ Error: {e}")
-        bot_gemini.reply_to(m, "اعتزر صار عطل غير متوقع انتظر شوي او كلم المطور.....")
-        
-# --- 🚀 نظام التشغيل السحابي ---
+        bot_gemini.reply_to(m, "يا وحش حصل تعليق، جرب لاحقاً أو كلم المطور.")
+
+# --- 🚀 تشغيل النظام ---
 def run_bot(bot, name):
     print(f"📡 {name} is starting...")
     while True:
         try:
-            bot.infinity_polling(timeout=20, long_polling_timeout=10)
-        except Exception as e:
-            print(f"⚠️ Error in {name}: {e}")
+            bot.infinity_polling(timeout=20)
+        except:
             time.sleep(5)
 
 if __name__ == "__main__":
-    # تشغيل سيرفر ويب لـ Koyeb (Health Check)
     PORT = int(os.getenv("PORT", 8000))
-    def start_server():
-        with socketserver.TCPServer(("", PORT), http.server.SimpleHTTPRequestHandler) as httpd:
-            httpd.serve_forever()
+    threading.Thread(target=lambda: socketserver.TCPServer(("", PORT), http.server.SimpleHTTPRequestHandler).serve_forever(), daemon=True).start()
     
-    threading.Thread(target=start_server, daemon=True).start()
-    
-    # تشغيل 3 بوتات في وقت واحد
     threads = [
         threading.Thread(target=run_bot, args=(bot_py, "Python Bot")),
         threading.Thread(target=run_bot, args=(bot_cpp, "C++ Bot")),
         threading.Thread(target=run_bot, args=(bot_gemini, "Gemini Bot"))
     ]
-    
     for t in threads: t.start()
-    print("🚀 Bot Empire is fully active with 3 Intelligent Bots!")
+    print("🚀 Bot Empire is fully active!")
     for t in threads: t.join()
-
-
-
