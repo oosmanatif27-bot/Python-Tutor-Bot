@@ -16,7 +16,7 @@ GEMINI_KEY = os.getenv("GEMINI_KEY")
 
 # --- 🤖 إعداد Gemini ---
 client = genai.Client(api_key=GEMINI_KEY)
-MODEL_ID = "gemini-1.5-pro" # استخدام النسخة المستقرة
+MODEL_ID = "gemini-1.5-flash" # استخدام النسخة المستقرة
 SYSTEM_PROMPT = "أنت 'خبير Bot Empire'؛ مبرمج محترف وصديق للمتعلم. أسلوبك سعودي أبيض. اشرح المعلومة بعمق وبساطة، شجع المستخدم بكلمات مثل 'يا بطل' أو 'يا وحش'."
 
 # --- 📡 تعريف البوتات ---
@@ -182,3 +182,4 @@ if __name__ == "__main__":
     for t in threads: t.start()
     print("🚀 Bot Empire is fully active and protected by CAN!")
     for t in threads: t.join()
+
