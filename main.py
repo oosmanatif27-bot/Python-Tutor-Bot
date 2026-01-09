@@ -16,7 +16,7 @@ GEMINI_KEY = os.getenv("GEMINI_KEY")
 
 # --- 🤖 إعداد الذكاء الاصطناعي (Gemini) ---
 genai.configure(api_key=GEMINI_KEY)
-model = genai.GenerativeModel('gemini-1.5-flash')
+model = genai.GenerativeModel('gemini-2.0-flash-exp')
 chat_session = model.start_chat(history=[])
 
 SYSTEM_PROMPT = "أنت 'خبير Bot Empire'؛ مبرمج محترف وصديق للمتعلم. أسلوبك سعودي أبيض، وسط بين الجدية والمرح. اشرح المعلومة بعمق وبساطة، شجع المستخدم بكلمات مثل 'يا بطل' أو 'يا وحش' إذا أصاب، ووجهه بهدوء إذا أخطأ."
@@ -174,3 +174,4 @@ if __name__ == "__main__":
     for t in threads: t.start()
     print("🚀 Bot Empire is fully active with 3 Intelligent Bots!")
     for t in threads: t.join()
+
