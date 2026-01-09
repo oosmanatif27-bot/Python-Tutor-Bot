@@ -134,25 +134,31 @@ def cpp_callback(c):
             bot_cpp.edit_message_text(f"✅ الحل: <code>{lessons_cpp[n]['solution']}</code>", c.message.chat.id, c.message.message_id, parse_mode="HTML")
     except: pass
 
-# --- 🤖 معالج Gemini (المطور) ---
+# --- 🤖 معالج Gemini (المطور - النسخة المستقرة) ---
 @bot_gemini.message_handler(func=lambda m: True)
 def gemini_handler(m):
     try:
+        # استخدام الطريقة المختصرة والمستقرة للطلب
         response = client.models.generate_content(
-            model=MODEL_ID,
+            model="gemini-1.5-flash", 
             contents=f"{SYSTEM_PROMPT}\nسؤال المستخدم: {m.text}"
         )
+        
         if response and response.text:
             bot_gemini.reply_to(m, response.text)
         else:
-            bot_gemini.reply_to(m, "يا وحش قوقل استلمت الرسالة بس ما عطتني رد، جرب تغير صيغة السؤال.")
+            bot_gemini.reply_to(m, "يا وحش، جاني رد فارغ من السيرفر، جرب تسأل مرة ثانية.")
+            
     except Exception as e:
-        err_str = str(e)
+        err_str = str(e).lower()
         print(f"❌ Gemini Error: {err_str}")
-        if "429" in err_str:
-            bot_gemini.reply_to(m, "قوقل تقول اركد شوي (ضغط عالي)، جرب بعد دقيقة.")
+        
+        if "404" in err_str:
+            bot_gemini.reply_to(m, "الخطأ 404: النظام جالس يتحدث، ثواني وراجعين.")
+        elif "429" in err_str:
+            bot_gemini.reply_to(m, "يا بطل، قوقل تقول 'اركد شوي' (ضغط عالي)، انتظر دقيقة.")
         else:
-            bot_gemini.reply_to(m, "يا وحش حصل تعليق تقني، جرب مرة ثانية.")
+            bot_gemini.reply_to(m, f"حصل تعليق تقني بسيط، جرب الحين. (Error: {err_str[:20]}...)")
 
 # --- 🚀 تشغيل النظام (نسخة CAN المستقرة) ---
 def run_bot(bot, name):
@@ -182,5 +188,6 @@ if __name__ == "__main__":
     for t in threads: t.start()
     print("🚀 Bot Empire is fully active and protected by CAN!")
     for t in threads: t.join()
+
 
 
