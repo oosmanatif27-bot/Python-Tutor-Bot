@@ -5,9 +5,9 @@ import http.server
 import socketserver
 import time
 import html
-import google.generativeai as genai
 from telebot import types
-from google import genai
+from google import genai # المكتبة الجديدة فقط
+
 
 # --- 🔑 إعدادات المفاتيح (Environment Variables) ---
 TOKEN_PY = os.getenv("TELEGRAM_TOKEN")
@@ -137,19 +137,18 @@ def cpp_callback(c):
 client = genai.Client(api_key=GEMINI_KEY)
 MODEL_ID = "gemini-2.0-flash-exp" # الموديل اللي طلبته
 
-# --- معالج بوت Gemini ---
+# --- 🤖 معالج بوت Gemini (بالطريقة الجديدة) ---
 @bot_gemini.message_handler(func=lambda m: True)
 def gemini_handler(m):
     try:
-        # الطريقة الجديدة للإرسال في المكتبة المحدثة
         response = client.models.generate_content(
             model=MODEL_ID,
-            contents=f"{SYSTEM_PROMPT}\nسؤال: {m.text}"
+            contents=f"{SYSTEM_PROMPT}\nسؤال المستخدم: {m.text}"
         )
         bot_gemini.reply_to(m, response.text)
     except Exception as e:
-        print(f"❌ خطأ الـ AI الجديد: {e}")
-        bot_gemini.reply_to(m, "يا وحش حصل تعليق في الاتصال مع قوقل، تأكد من المفتاح!")
+        print(f"❌ Error: {e}")
+        bot_gemini.reply_to(m, "اعتزر صار عطل غير متوقع انتظر شوي او كلم المطور.....")
         
 # --- 🚀 نظام التشغيل السحابي ---
 def run_bot(bot, name):
@@ -180,5 +179,6 @@ if __name__ == "__main__":
     for t in threads: t.start()
     print("🚀 Bot Empire is fully active with 3 Intelligent Bots!")
     for t in threads: t.join()
+
 
 
