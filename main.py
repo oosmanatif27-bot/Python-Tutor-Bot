@@ -3,21 +3,16 @@ import telebot
 import threading
 import http.server
 import socketserver
+import groq # تأكد من وجود هذا السطر فوق مع الـ imports
 import time
 import html
 from telebot import types
-from google import genai
 
 # --- 🔑 إعدادات المفاتيح ---
 TOKEN_PY = os.getenv("TELEGRAM_TOKEN")
 TOKEN_CPP = os.getenv("TELEGRAM_TOKEN2")
 TOKEN_GEMINI = os.getenv("TELEGRAM_TOKEN3")
-GEMINI_KEY = os.getenv("GEMINI_KEY")
-
-# --- 🤖 إعداد Gemini ---
-client = genai.Client(api_key=GEMINI_KEY)
-MODEL_ID = "gemini-1.5-pro-002" # استخدام النسخة المستقرة
-SYSTEM_PROMPT = "أنت 'خبير Bot Empire'؛ مبرمج محترف وصديق للمتعلم. أسلوبك سعودي أبيض. اشرح المعلومة بعمق وبساطة، شجع المستخدم بكلمات مثل 'يا بطل' أو 'يا وحش'."
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 
 # --- 📡 تعريف البوتات ---
 bot_py = telebot.TeleBot(TOKEN_PY)
@@ -134,31 +129,28 @@ def cpp_callback(c):
             bot_cpp.edit_message_text(f"✅ الحل: <code>{lessons_cpp[n]['solution']}</code>", c.message.chat.id, c.message.message_id, parse_mode="HTML")
     except: pass
 
-# --- 🤖 معالج Gemini (المطور - النسخة المستقرة) ---
+# --- 🤖 إعداد Llama 3 (البوت الثالث) ---
+# حط المفتاح اللي جبته من موقع Groq في الـ Environment Variables باسم GROQ_API_KEY
+client_llama = groq.Groq(api_key=os.getenv("GROQ_API_KEY"))
+
 @bot_gemini.message_handler(func=lambda m: True)
-def gemini_handler(m):
+def ai_bot_handler(m):
     try:
-        # استخدام الطريقة المختصرة والمستقرة للطلب
-        response = client.models.generate_content(
-            model="gemini-1.5-flash", 
-            contents=f"{SYSTEM_PROMPT}\nسؤال المستخدم: {m.text}"
+        # إرسال السؤال لـ Llama 3
+        response = client_llama.chat.completions.create(
+            messages=[
+                {"role": "system", "content":"أنت 'مستشار Bot Empire التقني'؛ خبير عاقل ورصين. مهمتك تعليم المستخدمين البرمجة والأمن السيبراني بأسلوب فلسفي وعميق. استخدم اللهجة السعودية البيضاء ونادِ المستخدم بـ يا بطل."},
+                {"role": "user", "content": m.text}
+            ],
+            model="llama3-8b-8192", # الموديل السريع والجبار
         )
         
-        if response and response.text:
-            bot_gemini.reply_to(m, response.text)
-        else:
-            bot_gemini.reply_to(m, "يا وحش، جاني رد فارغ من السيرفر، جرب تسأل مرة ثانية.")
-            
-    except Exception as e:
-        err_str = str(e).lower()
-        print(f"❌ Gemini Error: {err_str}")
+        # الرد على المستخدم
+        bot_gemini.reply_to(m, response.choices[0].message.content)
         
-        if "404" in err_str:
-            bot_gemini.reply_to(m, "الخطأ 404: النظام جالس يتحدث، ثواني وراجعين.")
-        elif "429" in err_str:
-            bot_gemini.reply_to(m, "يا بطل، قوقل تقول 'اركد شوي' (ضغط عالي)، انتظر دقيقة.")
-        else:
-            bot_gemini.reply_to(m, f"حصل تعليق تقني بسيط، جرب الحين. (Error: {err_str[:20]}...)")
+    except Exception as e:
+        print(f"❌ Llama Error: {e}")
+        bot_gemini.reply_to(m, "يا وحش حصل ضغط على السيرفر، جرب ترسل رسالتك مرة ثانية.")
 
 # --- 🚀 تشغيل النظام (نسخة CAN المستقرة) ---
 def run_bot(bot, name):
@@ -188,6 +180,7 @@ if __name__ == "__main__":
     for t in threads: t.start()
     print("🚀 Bot Empire is fully active and protected by CAN!")
     for t in threads: t.join()
+
 
 
 
